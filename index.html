@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OAB Lead Qualifier</title>
+    <!-- Incluindo a biblioteca stlite -->
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.52.0/build/stlite.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.52.0/build/stlite.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      stlite.mount(
+        {
+          requirements: ["pandas", "openpyxl", "requests", "python-dotenv", "unidecode", "beautifulsoup4", "lxml"],
+          entrypoint: "app/main.py",
+          files: {
+            "app/main.py": { url: "app/main.py" },
+            "app/upload.py": { url: "app/upload.py" },
+            "app/storage.py": { url: "app/storage.py" },
+            "app/enrichment/__init__.py": { url: "app/enrichment/__init__.py" },
+            "app/enrichment/bio_parser.py": { url: "app/enrichment/bio_parser.py" },
+            "app/enrichment/cnpj_module.py": { url: "app/enrichment/cnpj_module.py" },
+            "app/enrichment/google_meu_negocio.py": { url: "app/enrichment/google_meu_negocio.py" },
+            "app/enrichment/oab_module.py": { url: "app/enrichment/oab_module.py" },
+            "app/enrichment/site_checker.py": { url: "app/enrichment/site_checker.py" },
+            "app/scoring/__init__.py": { url: "app/scoring/__init__.py" },
+            "app/scoring/engine.py": { url: "app/scoring/engine.py" },
+            "app/ui/__init__.py": { url: "app/ui/__init__.py" },
+            "app/ui/closer_panel.py": { url: "app/ui/closer_panel.py" },
+            "app/ui/dashboard.py": { url: "app/ui/dashboard.py" },
+            "app/ui/lead_card.py": { url: "app/ui/lead_card.py" },
+            "app/ui/report_generator.py": { url: "app/ui/report_generator.py" }
+          }
+        },
+        document.getElementById("root")
+      );
+    </script>
+  </body>
+</html>
