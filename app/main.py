@@ -365,17 +365,21 @@ def render_sidebar(leads: list[dict], pagina: str):
                 else:
                     st.warning("⚠️ Preencha a URL e a Key.")
 
-            if st.session_state.get("leads"):
-                st.divider()
-                if st.button("🔥 Forçar Recalcular Scores", use_container_width=True, help="Transforma leads 'Frios' em 'Mornos/Quentes' usando a nova lógica"):
-                    with st.status("Processando...", expanded=False):
-                        novos_leads = []
-                        for l in st.session_state["leads"]:
-                            novos_leads.append(calcular_score(l)) # Forçar nova pontuação
-                        save_leads(novos_leads)
-                        st.session_state["leads"] = novos_leads
-                    st.success("Scores atualizados!")
-                    st.rerun()
+        # Botão de recalcular (FORA do expander para evitar erro)
+        if st.session_state.get("leads") and st.session_state.get("S_URL"):
+            st.divider()
+            if st.button("🔥 Recalcular Scores", use_container_width=True):
+                info_placeholder = st.empty()
+                info_placeholder.info("🕗 Reprocessando leads... por favor aguarde.")
+                
+                novos_leads = []
+                for l in st.session_state["leads"]:
+                    novos_leads.append(calcular_score(l))
+                
+                save_leads(novos_leads)
+                st.session_state["leads"] = novos_leads
+                info_placeholder.success("✅ Scores atualizados com sucesso!")
+                st.rerun()
 
 
 def _nav_btn(label: str, pagina_destino: str, ativo: bool):
