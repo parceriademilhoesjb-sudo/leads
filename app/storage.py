@@ -64,9 +64,10 @@ def save_leads(leads: list[dict]) -> None:
 
     try:
         # Upsert: se o username existir, ele ignora ou sobrescreve conforme config
-        # Para PostgREST (Supabase), usamos este header para Upsert:
         h = {**HEADERS, "Prefer": "resolution=merge-duplicates"}
-        requests.post(url, json=payload, headers=h)
+        r = requests.post(url, json=payload, headers=h)
+        if r.status_code not in [200, 201]:
+            print(f"Erro Supabase ({r.status_code}): {r.text}")
     except Exception as e:
         print(f"Erro ao salvar no Supabase: {e}")
         _save_json(leads)

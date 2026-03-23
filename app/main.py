@@ -360,13 +360,22 @@ def render_sidebar(leads: list[dict], pagina: str):
                         carregados = load_leads()
                         st.session_state["leads"] = carregados or []
                         st.success(f"✅ Conectado! {len(st.session_state['leads'])} leads na nuvem.")
-                        # Não damos rerun para a mensagem não sumir
                     except Exception as e:
                         st.error(f"❌ Erro de Conexão: {str(e)}")
-                        with st.expander("Ver detalhes do erro"):
-                            st.code(e)
                 else:
                     st.warning("⚠️ Preencha a URL e a Key.")
+
+            if st.session_state.get("leads"):
+                st.divider()
+                if st.button("🔥 Forçar Recalcular Scores", use_container_width=True, help="Transforma leads 'Frios' em 'Mornos/Quentes' usando a nova lógica"):
+                    with st.status("Processando...", expanded=False):
+                        novos_leads = []
+                        for l in st.session_state["leads"]:
+                            novos_leads.append(calcular_score(l)) # Forçar nova pontuação
+                        save_leads(novos_leads)
+                        st.session_state["leads"] = novos_leads
+                    st.success("Scores atualizados!")
+                    st.rerun()
 
 
 def _nav_btn(label: str, pagina_destino: str, ativo: bool):
