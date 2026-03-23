@@ -344,13 +344,27 @@ def render_sidebar(leads: list[dict], pagina: str):
         )
 
         with st.expander("⚙️ Conectar Nuvem"):
-            s_url = st.text_input("Supabase URL", value=os.environ.get("SUPABASE_URL", ""), type="password")
-            s_key = st.text_input("Supabase Anon Key", value=os.environ.get("SUPABASE_ANON_KEY", ""), type="password")
-            if s_url and s_key:
-                os.environ["SUPABASE_URL"] = s_url
-                os.environ["SUPABASE_ANON_KEY"] = s_key
-                if st.button("🔄 Sincronizar Agora"):
-                    st.rerun()
+            s_url = st.text_input("Supabase URL", value=st.session_state.get("S_URL", ""), type="password")
+            s_key = st.text_input("Supabase Anon Key", value=st.session_state.get("S_KEY", ""), type="password")
+            
+            if st.button("🔄 Testar e Sincronizar", use_container_width=True):
+                if s_url and s_key:
+                    st.session_state["S_URL"] = s_url
+                    st.session_state["S_KEY"] = s_key
+                    # Injetar para o storage.py usar
+                    os.environ["SUPABASE_URL"] = s_url
+                    os.environ["SUPABASE_ANON_KEY"] = s_key
+                    
+                    try:
+                        # Forçar recarregamento
+                        carregados = load_leads()
+                        st.session_state["leads"] = carregados or []
+                        st.success(f"Conectado com sucesso! {len(st.session_state['leads'])} leads encontrados.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erro ao conectar: {e}")
+                else:
+                    st.warning("Preencha ambos os campos.")
 
 
 def _nav_btn(label: str, pagina_destino: str, ativo: bool):
