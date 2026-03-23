@@ -27,7 +27,7 @@ CRITERIOS = {
     # Instagram (Peso maior para garantir classificação no browser)
     "sem_link_na_bio":        20,
     "cta_na_bio_sem_link":    25,
-    "identificado_pela_bio":  30,  # CRÍTICO: Pontos por ser advogado detectado
+    "identificado_pela_bio":  55,  # TURBO: Passa de Frio para MORNO automaticamente
     "followers_500_5k":       10,
     "conta_business":          5,
     "email_disponivel":        5,
@@ -36,9 +36,9 @@ CRITERIOS = {
 
 
 def classificar(score: int) -> str:
-    if score >= 70:
+    if score >= 75:     # Baixamos um pouco para pegar mais Quentes
         return "🔥 Quente"
-    elif score >= 45:
+    elif score >= 50:   # Base mínima para ser Morno
         return "🟡 Morno"
     else:
         return "❄️ Frio"
