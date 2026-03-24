@@ -1,15 +1,46 @@
 """
-storage.py — Persistência local com SQLite.
-Simples: grava em data/crm.db automaticamente. Sem configurações, sem nuvem.
+storage.py — Persistência adaptativa.
+- Servidor (Railway/local): SQLite em data/crm.db
+- Browser (stlite/Vercel): localStorage do browser via Pyodide JS interop
 """
 
 import json
+import sys
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "data" / "crm.db"
-DB_PATH.parent.mkdir(exist_ok=True, parents=True)
+# Detecta se está rodando no browser (Pyodide/stlite)
+_IS_PYODIDE = sys.platform == "emscripten"
 
+DB_PATH = Path(__file__).parent.parent / "data" / "crm.db"
+if not _IS_PYODIDE:
+    DB_PATH.parent.mkdir(exist_ok=True, parents=True)
+
+_LS_KEY = "oab_crm_leads"
+
+
+# ── localStorage (stlite/browser) ────────────────────────────────────────────
+
+def _ls_load() -> list[dict]:
+    try:
+        from js import localStorage  # type: ignore
+        raw = localStorage.getItem(_LS_KEY)
+        if raw:
+            return json.loads(str(raw))
+    except Exception:
+        pass
+    return []
+
+
+def _ls_save(leads: list[dict]) -> None:
+    try:
+        from js import localStorage  # type: ignore
+        localStorage.setItem(_LS_KEY, json.dumps(leads, ensure_ascii=False, default=str))
+    except Exception:
+        pass
+
+
+# ── SQLite (servidor) ─────────────────────────────────────────────────────────
 
 def _conn() -> sqlite3.Connection:
     c = sqlite3.connect(str(DB_PATH), check_same_thread=False)
@@ -24,42 +55,46 @@ def _conn() -> sqlite3.Connection:
             updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
-    # Migração: Adicionar coluna score se não existir
-    try:
-        cursor = c.cursor()
-        cursor.execute("PRAGMA table_info(leads)")
-        columns = [col[1] for col in cursor.fetchall()]
-        if "score" not in columns:
-            c.execute("ALTER TABLE leads ADD COLUMN score INTEGER NOT NULL DEFAULT 0")
-    except:
-        pass
     c.commit()
     return c
 
 
+# ── API pública ───────────────────────────────────────────────────────────────
+
 def add_leads(novos: list[dict]) -> int:
     """
-    Acumula leads novos no banco.
-    - Se o username já existe: atualiza dados mas MANTÉM o closer atual.
+    Acumula leads no banco/localStorage.
+    - Se username já existe: atualiza dados mas MANTÉM o closer atual.
     - Se é novo: insere com closer vazio.
     Retorna quantos leads foram adicionados/atualizados.
     """
+    if _IS_PYODIDE:
+        existentes = {l["username"]: l for l in _ls_load() if l.get("username")}
+        count = 0
+        for lead in novos:
+            username = lead.get("username", "")
+            if not username:
+                continue
+            closer = existentes.get(username, {}).get("closer", lead.get("closer", ""))
+            existentes[username] = {**lead, "closer": closer}
+            count += 1
+        _ls_save(sorted(existentes.values(), key=lambda x: x.get("score", 0), reverse=True))
+        return count
+
+    # SQLite
     c = _conn()
     closer_existente = {
         row[0]: row[1]
         for row in c.execute("SELECT username, closer FROM leads")
     }
-
     count = 0
     for lead in novos:
         username = lead.get("username", "")
         if not username:
             continue
-        # Preservar closer se já existia
         closer = closer_existente.get(username, lead.get("closer", ""))
         lead_final = {**lead, "closer": closer}
         score = int(lead.get("score", 0))
-
         c.execute("""
             INSERT INTO leads (username, data, closer, score, updated_at)
             VALUES (?, ?, ?, ?, datetime('now'))
@@ -69,18 +104,33 @@ def add_leads(novos: list[dict]) -> int:
                 updated_at = datetime('now')
         """, (username, json.dumps(lead_final, ensure_ascii=False, default=str), closer, score))
         count += 1
-
     c.commit()
     c.close()
     return count
 
 
 def load_leads() -> list[dict]:
-    """Carrega todos os leads ordenados por score desc. Migra crm.json se SQLite vazio."""
+    """Carrega todos os leads ordenados por score desc."""
+    if _IS_PYODIDE:
+        leads = _ls_load()
+        if not leads:
+            # Primeira visita: tenta carregar crm.json incluído pelo stlite
+            try:
+                json_path = Path(__file__).parent.parent / "data" / "crm.json"
+                if json_path.exists():
+                    with open(json_path, encoding="utf-8") as f:
+                        legado = json.load(f)
+                    if legado:
+                        add_leads(legado)
+                        leads = _ls_load()
+            except Exception:
+                pass
+        return leads
+
+    # SQLite
     c = _conn()
     rows = c.execute("SELECT data, closer FROM leads ORDER BY score DESC").fetchall()
 
-    # Migrar dados do crm.json legado se o banco estiver vazio
     if not rows:
         json_path = DB_PATH.parent / "crm.json"
         if json_path.exists():
@@ -108,6 +158,16 @@ def load_leads() -> list[dict]:
 
 def update_closer(username: str, closer: str) -> None:
     """Atualiza o closer de um lead específico."""
+    if _IS_PYODIDE:
+        leads = _ls_load()
+        for lead in leads:
+            if lead.get("username") == username:
+                lead["closer"] = closer
+                break
+        _ls_save(leads)
+        return
+
+    # SQLite
     c = _conn()
     c.execute(
         "UPDATE leads SET closer = ?, updated_at = datetime('now') WHERE username = ?",
@@ -124,6 +184,8 @@ def update_closer(username: str, closer: str) -> None:
 
 
 def total_leads() -> int:
+    if _IS_PYODIDE:
+        return len(_ls_load())
     c = _conn()
     n = c.execute("SELECT COUNT(*) FROM leads").fetchone()[0]
     c.close()
