@@ -18,8 +18,8 @@ def _get_config():
     """Busca as chaves de forma dinâmica (Vercel ou Campo Manual do Streamlit)."""
     # Prioridade 1: Session State (digitado na UI)
     # Prioridade 2: Environment Variables (Vercel/Local)
-    url = st.session_state.get("S_URL") or os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or st.secrets.get("SUPABASE_URL") if hasattr(st, "secrets") else None
-    key = st.session_state.get("S_KEY") or os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY") or st.secrets.get("SUPABASE_ANON_KEY") if hasattr(st, "secrets") else None
+    url = st.session_state.get("S_URL") or os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = st.session_state.get("S_KEY") or os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     return url, key
 
 def _get_headers(key):
