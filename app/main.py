@@ -4,6 +4,7 @@ CRM com dashboard principal + painéis por closer.
 """
 
 import os
+import json
 import concurrent.futures
 import streamlit as st
 from dotenv import load_dotenv
@@ -336,49 +337,83 @@ def render_sidebar(leads: list[dict], pagina: str):
             "upload", ativo_up,
         )
 
+        # ── Backup / Segurança ──
         st.divider()
-        st.markdown(
-            "<p style='color:#64748B;font-size:11px;text-align:center'>"
-            "💾 Dados salvos automaticamente</p>",
-            unsafe_allow_html=True,
-        )
-
-        with st.expander("⚙️ Conectar Nuvem"):
-            s_url = st.text_input("Supabase URL", value=st.session_state.get("S_URL", ""), type="password")
-            s_key = st.text_input("Supabase Anon Key", value=st.session_state.get("S_KEY", ""), type="password")
+        with st.expander("💾 Backup e Segurança"):
+            st.markdown("<p style='font-size:12px'>Como o app roda no seu navegador, baixe a base ocasionalmente para não perder dados se limpar o cache.</p>", unsafe_allow_html=True)
+            if leads:
+                js_data = json.dumps(leads, ensure_ascii=False, indent=2)
+                st.download_button(
+                    "📥 Baixar Backup (.json)",
+                    js_data.encode("utf-8"),
+                    "leads_backup.json",
+                    "application/json",
+                    use_container_width=True
+                )
             
-            if st.button("🔄 Testar e Sincronizar", use_container_width=True):
+            uploaded_backup = st.file_uploader("Restaurar Backup", type=["json"])
+            if uploaded_backup:
+                try:
+                    restored = json.load(uploaded_backup)
+                    if isinstance(restored, list):
+                        st.session_state["leads"] = restored
+                        save_leads(restored)
+                        st.success("✅ Backup restaurado!")
+                        st.rerun()
+                except:
+                    st.error("Arquivo inválido.")
+
+        # ── Conexão com Nuvem (Supabase) ──
+        with st.expander("☁️ CONECTAR NUVEM", expanded=not bool(st.session_state.get("S_URL"))):
+            st.markdown("<p style='font-size:12px;color:#94A3B8'>Use o Supabase para salvar os leads permanentemente na nuvem.</p>", unsafe_allow_html=True)
+            
+            s_url = st.text_input("Supabase URL", value=st.session_state.get("S_URL", ""), placeholder="https://xyz.supabase.co")
+            s_key = st.text_input("Anon Key", value=st.session_state.get("S_KEY", ""), type="password", placeholder="eyJhbGciOiJIUzI1NiI...")
+            
+            if st.button("🚀 Conectar e Sincronizar", use_container_width=True):
                 if s_url and s_key:
                     st.session_state["S_URL"] = s_url
                     st.session_state["S_KEY"] = s_key
-                    # Injetar para o storage.py usar
+                    # Injetar para os módulos usarem
                     os.environ["SUPABASE_URL"] = s_url
                     os.environ["SUPABASE_ANON_KEY"] = s_key
                     
-                    try:
-                        # Forçar recarregamento para testar
-                        carregados = load_leads()
-                        st.session_state["leads"] = carregados or []
-                        st.success(f"✅ Conectado! {len(st.session_state['leads'])} leads na nuvem.")
-                    except Exception as e:
-                        st.error(f"❌ Erro de Conexão: {str(e)}")
-                else:
-                    st.warning("⚠️ Preencha a URL e a Key.")
+                    with st.spinner("Sincronizando..."):
+                        nuvem = load_leads()
+                        st.session_state["leads"] = nuvem if nuvem else (st.session_state.get("leads") or [])
+                        if st.session_state["leads"]:
+                            save_leads(st.session_state["leads"])
+                        st.success("✅ Sincronizado!")
+                        st.rerun()
 
-        # Botão de recalcular (FORA do expander para evitar erro)
-        if st.session_state.get("leads") and st.session_state.get("S_URL"):
+        # ── Chaves de API (Google/OAB) ──
+        with st.expander("🔑 CHAVES DE ENRIQUECIMENTO (OPCIONAL)"):
+            st.markdown("<p style='font-size:11px;color:#64748B'>Chaves necessárias para busca automática de site e OAB no Google.</p>", unsafe_allow_html=True)
+            g_key = st.text_input("Google API Key", value=os.environ.get("GOOGLE_API_KEY", ""), type="password")
+            g_cse = st.text_input("Google CSE ID", value=os.environ.get("GOOGLE_CSE_ID", ""), type="password")
+            
+            if st.button("💾 Salvar Chaves", use_container_width=True):
+                os.environ["GOOGLE_API_KEY"] = g_key
+                os.environ["GOOGLE_CSE_ID"] = g_cse
+                st.success("Chaves salvas p/ esta sessão!")
+
+        # ── Manutenção ──
+        if st.session_state.get("leads"):
             st.divider()
-            if st.button("🔥 Recalcular Scores", use_container_width=True):
+            if st.button("🔥 RECALCULAR TODOS OS SCORES", use_container_width=True):
                 info_placeholder = st.empty()
                 info_placeholder.info("🕗 Reprocessando leads... por favor aguarde.")
                 
                 novos_leads = []
-                for l in st.session_state["leads"]:
+                bar = st.progress(0)
+                tot = len(st.session_state["leads"])
+                for i, l in enumerate(st.session_state["leads"]):
                     novos_leads.append(calcular_score(l))
+                    bar.progress((i+1)/tot)
                 
-                save_leads(novos_leads)
                 st.session_state["leads"] = novos_leads
-                info_placeholder.success("✅ Scores atualizados com sucesso!")
+                save_leads(novos_leads)
+                info_placeholder.success("✅ Scores atualizados e salvos!")
                 st.rerun()
 
 

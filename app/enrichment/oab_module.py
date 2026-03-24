@@ -11,25 +11,33 @@ import requests
 from unidecode import unidecode
 
 OAB_API_URL = "https://cna.oab.org.br/api/advogados"
-DELAY = float(os.getenv("DELAY_OAB", "0.3"))  # Reduzido: API OAB pode estar indisponível
+DELAY = float(os.getenv("DELAY_OAB", "0.3"))
+
+def _get_oab_url():
+    """Retorna a URL da OAB, possivelmente via proxy se estiver no browser."""
+    # Se estiver rodando no Stlite (Vercel), precisamos de um proxy CORS
+    is_stlite = os.environ.get("STLITE_URL") or "localhost" not in os.environ.get("HTTP_HOST", "localhost")
+    if is_stlite:
+        return f"https://corsproxy.io/?{OAB_API_URL}"
+    return OAB_API_URL
 
 _session = requests.Session()
 _session.headers.update({
-    "User-Agent": "Mozilla/5.0 (compatible; OABLeadQualifier/1.0)",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     "Accept": "application/json",
 })
 
 
 def _query_oab(nome: str, uf: str = "") -> list[dict]:
     """Faz a requisição ao CNA e retorna lista de resultados."""
+    url = _get_oab_url()
     params = {"nome": nome}
     if uf:
         params["uf"] = uf.upper()
     try:
-        resp = _session.get(OAB_API_URL, params=params, timeout=5)
+        resp = _session.get(url, params=params, timeout=10)
         resp.raise_for_status()
         data = resp.json()
-        # A API retorna {"Data": [...]} ou diretamente uma lista
         if isinstance(data, dict):
             return data.get("Data", []) or data.get("data", [])
         if isinstance(data, list):

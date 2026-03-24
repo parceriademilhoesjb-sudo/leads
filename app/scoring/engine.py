@@ -36,9 +36,9 @@ CRITERIOS = {
 
 
 def classificar(score: int) -> str:
-    if score >= 75:     # Baixamos um pouco para pegar mais Quentes
+    if score >= 70:     # Alinhado com CLAUDE.md
         return "🔥 Quente"
-    elif score >= 50:   # Base mínima para ser Morno
+    elif score >= 45:   # Alinhado com CLAUDE.md
         return "🟡 Morno"
     else:
         return "❄️ Frio"

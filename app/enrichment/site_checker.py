@@ -49,10 +49,23 @@ def _google_cse_search(query: str) -> str:
         time.sleep(DELAY_GOOGLE)
 
 
+def _get_proxied_url(url: str) -> str:
+    """Retorna a URL possivelmente via proxy se estiver no browser."""
+    # Se for API do Google, não precisa de proxy (elas suportam CORS se configuradas)
+    if "googleapis.com" in url:
+        return url
+    # Se estiver rodando no Stlite (Vercel), precisamos de um proxy CORS
+    is_stlite = os.environ.get("STLITE_URL") or "localhost" not in os.environ.get("HTTP_HOST", "localhost")
+    if is_stlite:
+        return f"https://corsproxy.io/?{url}"
+    return url
+
+
 def _fetch_html(url: str) -> str:
     """Busca o HTML de uma URL com timeout."""
     try:
-        resp = _session.get(url, timeout=12, allow_redirects=True)
+        p_url = _get_proxied_url(url)
+        resp = _session.get(p_url, timeout=15, allow_redirects=True)
         resp.raise_for_status()
         return resp.text
     except Exception:
