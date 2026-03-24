@@ -193,14 +193,14 @@ def render_lead_card(lead: dict, show_assign: bool = False):
         # ── Score breakdown ───────────────────────────────────────────────────
         criterios = lead.get("criterios_aplicados", [])
         if criterios:
-            with st.expander("Ver breakdown do score", expanded=False):
-                from scoring.engine import CRITERIOS
-                for c in criterios:
-                    pts = CRITERIOS.get(c, 0)
-                    color_pt = "#16A34A" if pts > 0 else "#DC2626"
-                    sign = "+" if pts > 0 else ""
-                    st.markdown(
-                        f"<span style='color:{color_pt};font-weight:600'>{sign}{pts}pts</span> "
-                        f"<span style='color:#94A3B8'>{c}</span>",
-                        unsafe_allow_html=True,
-                    )
+            st.markdown("<p style='color:#64748B;font-size:11px;font-weight:700;margin-top:16px'>DETALHAMENTO DO SCORE</p>", unsafe_allow_html=True)
+            from scoring.engine import CRITERIOS
+            for c in criterios:
+                pts = CRITERIOS.get(c, 0)
+                color_pt = "#16A34A" if pts > 0 else "#DC2626"
+                sign = "+" if pts > 0 else ""
+                st.markdown(
+                    f"<span style='color:{color_pt};font-weight:600'>{sign}{pts}pts</span> "
+                    f"<span style='color:#94A3B8'>{c}</span>",
+                    unsafe_allow_html=True,
+                )
