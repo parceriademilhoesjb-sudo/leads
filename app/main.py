@@ -1,10 +1,9 @@
 """
-main.py — Entrypoint Streamlit do OAB Lead Qualifier.
-CRM com dashboard principal + painéis por closer.
+main.py — OAB Lead Qualifier CRM
+Upload → Enriquecer → Dashboard → Atribuir para closers
+Leads acumulam no banco a cada upload. Tudo persiste automaticamente.
 """
 
-import os
-import json
 import concurrent.futures
 import streamlit as st
 from dotenv import load_dotenv
@@ -18,7 +17,7 @@ from enrichment.site_checker import check_site
 from scoring.engine import calcular_score
 from ui.dashboard import render_dashboard
 from ui.closer_panel import render_closer_panel
-from storage import save_leads, load_leads, update_closer
+from storage import add_leads, load_leads, update_closer
 
 CLOSERS = {
     "matheus":  "Matheus",
@@ -26,7 +25,7 @@ CLOSERS = {
     "giovanne": "Giovanne",
 }
 
-# ── Configuração da página ────────────────────────────────────────────────────
+# ── Página ────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="OAB Lead Qualifier",
     page_icon="⚖️",
@@ -34,438 +33,270 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# CSS customizado — dark theme Trust & Authority
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* ── Base ───────────────────────────────────────────────── */
-    html, body, [class*="css"], .stApp {
-        font-family: 'Inter', sans-serif !important;
-        background-color: #0D1B2A !important;
-        color: #F1F5F9 !important;
-    }
+html, body, [class*="css"], .stApp {
+    font-family: 'Inter', sans-serif !important;
+    background-color: #0D1B2A !important;
+    color: #F1F5F9 !important;
+}
+header[data-testid="stHeader"] {
+    background-color: #0A1628 !important;
+    border-bottom: 1px solid #1E3050;
+}
+.block-container {
+    max-width: 1280px !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 3rem !important;
+}
 
-    /* ── Header / topbar ────────────────────────────────────── */
-    header[data-testid="stHeader"] {
-        background-color: #0A1628 !important;
-        border-bottom: 1px solid #1E3050;
-    }
+/* ── Sidebar ── */
+section[data-testid="stSidebar"] {
+    background-color: #0A1628 !important;
+    border-right: 1px solid #1E3050;
+}
+section[data-testid="stSidebar"] .block-container {
+    padding-top: 1rem !important;
+}
+/* Botões da sidebar: fundo transparente por padrão */
+section[data-testid="stSidebar"] .stButton > button {
+    background: transparent !important;
+    border: none !important;
+    color: #94A3B8 !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    transition: all 0.15s !important;
+    font-size: 14px !important;
+}
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: #162032 !important;
+    color: #F1F5F9 !important;
+    border: none !important;
+}
 
-    /* ── Container principal ────────────────────────────────── */
-    .block-container {
-        max-width: 1280px !important;
-        padding-top: 2rem !important;
-        padding-bottom: 3rem !important;
-    }
+/* ── Métricas ── */
+div[data-testid="metric-container"] {
+    background: #162032 !important;
+    border: 1px solid #2D4A6E !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    transition: border-color 0.2s;
+}
+div[data-testid="metric-container"]:hover { border-color: #F59E0B !important; }
+div[data-testid="metric-container"] label { color: #94A3B8 !important; font-size: 13px !important; }
+div[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    color: #F1F5F9 !important; font-size: 2rem !important; font-weight: 700 !important;
+}
 
-    /* ── Sidebar ────────────────────────────────────────────── */
-    section[data-testid="stSidebar"] {
-        background-color: #0A1628 !important;
-        border-right: 1px solid #1E3050;
-        min-width: 240px !important;
-    }
-    section[data-testid="stSidebar"] .block-container {
-        padding-top: 1rem !important;
-    }
+/* ── Expanders ── */
+details {
+    background: #162032 !important;
+    border: 1px solid #2D4A6E !important;
+    border-radius: 10px !important;
+    margin-bottom: 10px !important;
+    overflow: hidden;
+}
+details summary {
+    padding: 14px 18px !important;
+    color: #F1F5F9 !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+    background: #162032 !important;
+}
+details summary:hover { background: #1E3050 !important; }
+details[open] summary { border-bottom: 1px solid #2D4A6E; }
+details > div { padding: 16px 18px !important; }
 
-    /* Botões de navegação da sidebar */
-    section[data-testid="stSidebar"] .stButton > button {
-        background: transparent !important;
-        border: none !important;
-        color: #94A3B8 !important;
-        font-weight: 500 !important;
-        text-align: left !important;
-        padding: 8px 12px !important;
-        border-radius: 8px !important;
-        width: 100% !important;
-        transition: all 0.15s !important;
-    }
-    section[data-testid="stSidebar"] .stButton > button:hover {
-        background: #162032 !important;
-        color: #F1F5F9 !important;
-        border: none !important;
-    }
+/* ── Botões gerais ── */
+.block-container .stButton > button {
+    border-radius: 8px !important;
+    background: #1E3050 !important;
+    color: #F1F5F9 !important;
+    border: 1px solid #2D4A6E !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    transition: all 0.2s !important;
+}
+.block-container .stButton > button:hover {
+    background: #F59E0B !important;
+    color: #0A1628 !important;
+    border-color: #F59E0B !important;
+}
+a[data-testid="stLinkButton"] {
+    border-radius: 8px !important;
+    background: #1E3050 !important;
+    border: 1px solid #2D4A6E !important;
+    color: #F1F5F9 !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+}
+a[data-testid="stLinkButton"]:hover {
+    background: #F59E0B !important; border-color: #F59E0B !important; color: #0A1628 !important;
+}
 
-    /* ── Métricas ────────────────────────────────────────────── */
-    div[data-testid="metric-container"] {
-        background: #162032 !important;
-        border: 1px solid #2D4A6E !important;
-        border-radius: 12px !important;
-        padding: 16px 20px !important;
-        transition: border-color 0.2s;
-    }
-    div[data-testid="metric-container"]:hover {
-        border-color: #F59E0B !important;
-    }
-    div[data-testid="metric-container"] label {
-        color: #94A3B8 !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-    }
-    div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-        color: #F1F5F9 !important;
-        font-size: 2rem !important;
-        font-weight: 700 !important;
-    }
+/* ── File uploader ── */
+[data-testid="stFileUploaderDropzone"] {
+    background: #162032 !important;
+    border: 2px dashed #2D4A6E !important;
+    border-radius: 12px !important;
+    transition: border-color 0.2s;
+}
+[data-testid="stFileUploaderDropzone"]:hover { border-color: #F59E0B !important; }
+[data-testid="stFileUploaderDropzone"] p,
+[data-testid="stFileUploaderDropzone"] span,
+[data-testid="stFileUploaderDropzone"] small { color: #94A3B8 !important; }
 
-    /* ── Expanders ───────────────────────────────────────────── */
-    details {
-        background: #162032 !important;
-        border: 1px solid #2D4A6E !important;
-        border-radius: 10px !important;
-        margin-bottom: 10px !important;
-        overflow: hidden;
-    }
-    details summary {
-        padding: 14px 18px !important;
-        color: #F1F5F9 !important;
-        font-weight: 500 !important;
-        cursor: pointer;
-        background: #162032 !important;
-    }
-    details summary:hover {
-        background: #1E3050 !important;
-    }
-    details[open] summary {
-        border-bottom: 1px solid #2D4A6E;
-    }
-    details > div {
-        padding: 16px 18px !important;
-    }
+/* ── Selectbox ── */
+[data-testid="stSelectbox"] > div > div {
+    background: #162032 !important;
+    border: 1px solid #2D4A6E !important;
+    border-radius: 8px !important;
+    color: #F1F5F9 !important;
+}
+[data-testid="stCheckbox"] label { color: #F1F5F9 !important; }
 
-    /* ── Botões principais ───────────────────────────────────── */
-    .block-container .stButton > button {
-        border-radius: 8px !important;
-        background: #1E3050 !important;
-        color: #F1F5F9 !important;
-        border: 1px solid #2D4A6E !important;
-        font-weight: 600 !important;
-        padding: 8px 16px !important;
-        transition: all 0.2s !important;
-    }
-    .block-container .stButton > button:hover {
-        background: #F59E0B !important;
-        color: #0A1628 !important;
-        border-color: #F59E0B !important;
-    }
+/* ── Download ── */
+[data-testid="stDownloadButton"] > button {
+    background: #F59E0B !important; color: #0A1628 !important;
+    border: none !important; border-radius: 8px !important; font-weight: 700 !important;
+}
+[data-testid="stDownloadButton"] > button:hover { background: #D97706 !important; }
 
-    /* ── Link buttons ────────────────────────────────────────── */
-    a[data-testid="stLinkButton"] {
-        border-radius: 8px !important;
-        background: #1E3050 !important;
-        border: 1px solid #2D4A6E !important;
-        color: #F1F5F9 !important;
-        font-weight: 600 !important;
-        transition: all 0.2s !important;
-    }
-    a[data-testid="stLinkButton"]:hover {
-        background: #F59E0B !important;
-        border-color: #F59E0B !important;
-        color: #0A1628 !important;
-    }
+/* ── Progress ── */
+[data-testid="stProgressBar"] > div > div {
+    background: linear-gradient(90deg, #F59E0B, #EF4444) !important;
+    border-radius: 4px !important;
+}
 
-    /* ── File uploader ───────────────────────────────────────── */
-    [data-testid="stFileUploaderDropzone"] {
-        background: #162032 !important;
-        border: 2px dashed #2D4A6E !important;
-        border-radius: 12px !important;
-        transition: border-color 0.2s;
-    }
-    [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #F59E0B !important;
-    }
-    [data-testid="stFileUploaderDropzone"] p,
-    [data-testid="stFileUploaderDropzone"] span,
-    [data-testid="stFileUploaderDropzone"] small {
-        color: #94A3B8 !important;
-    }
+/* ── Alert ── */
+[data-testid="stAlert"] { border-radius: 10px !important; border-left-width: 4px !important; }
 
-    /* ── Selectbox ───────────────────────────────────────────── */
-    [data-testid="stSelectbox"] > div > div {
-        background: #162032 !important;
-        border: 1px solid #2D4A6E !important;
-        border-radius: 8px !important;
-        color: #F1F5F9 !important;
-    }
+/* ── Divider / Caption ── */
+hr { border-color: #2D4A6E !important; margin: 16px 0 !important; }
+.stCaption, [data-testid="stCaptionContainer"] { color: #64748B !important; }
 
-    /* ── Checkbox ────────────────────────────────────────────── */
-    [data-testid="stCheckbox"] label {
-        color: #F1F5F9 !important;
-    }
-
-    /* ── Download button ─────────────────────────────────────── */
-    [data-testid="stDownloadButton"] > button {
-        background: #F59E0B !important;
-        color: #0A1628 !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-weight: 700 !important;
-    }
-    [data-testid="stDownloadButton"] > button:hover {
-        background: #D97706 !important;
-        color: #0A1628 !important;
-    }
-
-    /* ── Progress bar ────────────────────────────────────────── */
-    [data-testid="stProgressBar"] > div > div {
-        background: linear-gradient(90deg, #F59E0B, #EF4444) !important;
-        border-radius: 4px !important;
-    }
-
-    /* ── Info / warning / error boxes ───────────────────────── */
-    [data-testid="stAlert"] {
-        border-radius: 10px !important;
-        border-left-width: 4px !important;
-    }
-    div[data-baseweb="notification"] {
-        background: #162032 !important;
-        border-color: #F59E0B !important;
-    }
-
-    /* ── Divider ─────────────────────────────────────────────── */
-    hr {
-        border-color: #2D4A6E !important;
-        margin: 16px 0 !important;
-    }
-
-    /* ── Caption / small text ────────────────────────────────── */
-    .stCaption, [data-testid="stCaptionContainer"] {
-        color: #64748B !important;
-    }
-
-    /* ── Scrollbar ───────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0D1B2A; }
-    ::-webkit-scrollbar-thumb { background: #2D4A6E; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #F59E0B; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0D1B2A; }
+::-webkit-scrollbar-thumb { background: #2D4A6E; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #F59E0B; }
+</style>
+""", unsafe_allow_html=True)
 
 
-# ── Enriquecimento de lead ────────────────────────────────────────────────────
+# ── Enriquecimento ────────────────────────────────────────────────────────────
 def _enrich_lead(lead_dict: dict) -> dict:
-    bio = lead_dict.get("bio", "")
+    bio          = lead_dict.get("bio", "")
     external_url = lead_dict.get("external_url", "")
-    phone_full = lead_dict.get("phone_full", "")
-    username = lead_dict.get("username", "")
-    full_name = lead_dict.get("full_name_normalizado", lead_dict.get("full_name", ""))
-    city = lead_dict.get("city", "")
+    phone_full   = lead_dict.get("phone_full", "")
+    username     = lead_dict.get("username", "")
+    full_name    = lead_dict.get("full_name_normalizado", lead_dict.get("full_name", ""))
+    city         = lead_dict.get("city", "")
 
-    # bio_parser é sempre instantâneo (sem rede)
     bio_data = parse_bio(bio, external_url=external_url, phone_full=phone_full, username=username)
 
-    # APIs externas com timeout individual (OAB pode estar fora do ar)
-    oab_data = {}
-    site_data = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
-        fut_oab = ex.submit(lookup_oab, full_name, city)
+        fut_oab  = ex.submit(lookup_oab, full_name, city)
         fut_site = ex.submit(check_site, external_url, full_name, city)
-        try:
-            oab_data = fut_oab.result(timeout=15)
-        except Exception:
-            oab_data = {}   # OAB indisponível — scoring parcial
-        try:
-            site_data = fut_site.result(timeout=15)
-        except Exception:
-            site_data = {}  # Site checker falhou — scoring parcial
+        try:    oab_data  = fut_oab.result(timeout=15)
+        except: oab_data  = {}
+        try:    site_data = fut_site.result(timeout=15)
+        except: site_data = {}
 
     enriched = {**lead_dict, **bio_data, **oab_data, **site_data}
-    enriched.setdefault("oab_numero", "")
-    enriched.setdefault("oab_situacao", "")
-    enriched.setdefault("oab_anos_ativo", None)
-    enriched.setdefault("oab_encontrado", False)
-    enriched.setdefault("site_encontrado", False)
-    enriched.setdefault("has_fb_pixel", False)
-    enriched.setdefault("has_ga", False)
-    enriched.setdefault("cnpj_numero", "")
-    enriched.setdefault("cnpj_situacao", "")
-    enriched.setdefault("cnpj_cnae_juridico", False)
-    enriched.setdefault("cnpj_razao_social", "")
-    enriched.setdefault("gmb_encontrado", False)
-    enriched.setdefault("gmb_reviews", 0)
-    enriched.setdefault("closer", "")
-
-    # Sempre calcular score com o que tiver — nunca retornar score=0 por falha de API
+    enriched.setdefault("oab_numero", "");   enriched.setdefault("oab_situacao", "")
+    enriched.setdefault("oab_anos_ativo", None); enriched.setdefault("oab_encontrado", False)
+    enriched.setdefault("site_encontrado", False); enriched.setdefault("has_fb_pixel", False)
+    enriched.setdefault("has_ga", False);    enriched.setdefault("cnpj_numero", "")
+    enriched.setdefault("cnpj_situacao", ""); enriched.setdefault("cnpj_cnae_juridico", False)
+    enriched.setdefault("cnpj_razao_social", ""); enriched.setdefault("gmb_encontrado", False)
+    enriched.setdefault("gmb_reviews", 0);   enriched.setdefault("closer", "")
     return calcular_score(enriched)
 
 
-# ── Sidebar de navegação (sempre visível) ─────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
+def _nav_btn(label: str, destino: str, ativo: bool):
+    if ativo:
+        st.markdown(
+            f"<style>[data-testid='stSidebar'] [data-testid='baseButton-secondary'][kind='secondary']"
+            f":has(+ [style*='display: none']) + div button[title='{label}']"
+            f"{{background:#162032!important;color:#F59E0B!important;"
+            f"border-left:3px solid #F59E0B!important;font-weight:700!important}}</style>",
+            unsafe_allow_html=True,
+        )
+    if st.button(label, use_container_width=True, key=f"nav__{destino}"):
+        st.session_state["pagina"] = destino
+        st.rerun()
+
+
 def render_sidebar(leads: list[dict], pagina: str):
-    disponiveis = sum(1 for l in leads if not l.get("closer"))
+    total        = len(leads)
+    disponiveis  = sum(1 for l in leads if not l.get("closer"))
 
     with st.sidebar:
+        # Logo
         st.markdown(
-            "<div style='padding:8px 4px 16px'>"
-            "<span style='font-size:1.4rem'>⚖️</span> "
-            "<span style='font-size:1rem;font-weight:800;color:#F1F5F9'>OAB Lead Qualifier</span>"
+            "<div style='padding:12px 4px 20px;border-bottom:1px solid #1E3050;margin-bottom:16px'>"
+            "<div style='font-size:1.5rem;margin-bottom:4px'>⚖️</div>"
+            "<div style='font-size:0.95rem;font-weight:800;color:#F1F5F9;letter-spacing:-0.3px'>"
+            "OAB Lead Qualifier</div>"
+            "<div style='font-size:11px;color:#64748B;margin-top:2px'>"
+            f"{total} leads no banco</div>"
             "</div>",
             unsafe_allow_html=True,
         )
 
-        # ── Dashboard principal ──
-        ativo_dash = pagina == "dashboard"
-        _nav_btn(
-            f"{'▶ ' if ativo_dash else ''}📊 Dashboard ({disponiveis})",
-            "dashboard", ativo_dash,
-        )
+        # Navegação principal
+        _nav_btn(f"📊 Dashboard  ({disponiveis} disponíveis)", "dashboard", pagina == "dashboard")
 
         st.markdown(
             "<p style='color:#64748B;font-size:11px;font-weight:700;text-transform:uppercase;"
             "letter-spacing:0.8px;margin:16px 4px 6px'>Closers</p>",
             unsafe_allow_html=True,
         )
-
-        # ── Painel de cada closer ──
         for slug, nome in CLOSERS.items():
             count = sum(1 for l in leads if l.get("closer") == slug)
-            ativo = pagina == f"closer_{slug}"
-            _nav_btn(
-                f"{'▶ ' if ativo else ''}👤 {nome} ({count})",
-                f"closer_{slug}", ativo,
-            )
+            _nav_btn(f"👤 {nome}  ({count})", f"closer_{slug}", pagina == f"closer_{slug}")
 
         st.divider()
+        _nav_btn("⬆️ Adicionar leads", "upload", pagina == "upload")
 
-        # ── Upload / Admin ──
-        ativo_up = pagina == "upload"
-        _nav_btn(
-            f"{'▶ ' if ativo_up else ''}⬆️ Upload / Admin",
-            "upload", ativo_up,
-        )
-
-        # ── Backup / Segurança ──
-        st.divider()
-        with st.expander("💾 Backup e Segurança"):
-            st.markdown("<p style='font-size:12px'>Como o app roda no seu navegador, baixe a base ocasionalmente para não perder dados se limpar o cache.</p>", unsafe_allow_html=True)
-            if leads:
-                js_data = json.dumps(leads, ensure_ascii=False, indent=2)
-                st.download_button(
-                    "📥 Baixar Backup (.json)",
-                    js_data.encode("utf-8"),
-                    "leads_backup.json",
-                    "application/json",
-                    use_container_width=True
-                )
-            
-            uploaded_backup = st.file_uploader("Restaurar Backup", type=["json"])
-            if uploaded_backup:
-                try:
-                    restored = json.load(uploaded_backup)
-                    if isinstance(restored, list):
-                        st.session_state["leads"] = restored
-                        save_leads(restored)
-                        st.success("✅ Backup restaurado!")
-                        st.rerun()
-                except:
-                    st.error("Arquivo inválido.")
-
-        # ── Conexão com Nuvem (Supabase) ──
-        with st.expander("☁️ CONECTAR NUVEM", expanded=not bool(st.session_state.get("S_URL"))):
-            st.markdown("<p style='font-size:12px;color:#94A3B8'>Use o Supabase para salvar os leads permanentemente na nuvem.</p>", unsafe_allow_html=True)
-            
-            s_url = st.text_input("Supabase URL", value=st.session_state.get("S_URL", ""), placeholder="https://xyz.supabase.co")
-            s_key = st.text_input("Anon Key", value=st.session_state.get("S_KEY", ""), type="password", placeholder="eyJhbGciOiJIUzI1NiI...")
-            
-            if st.button("🚀 Conectar e Sincronizar", use_container_width=True):
-                if s_url and s_key:
-                    st.session_state["S_URL"] = s_url
-                    st.session_state["S_KEY"] = s_key
-                    # Injetar para os módulos usarem
-                    os.environ["SUPABASE_URL"] = s_url
-                    os.environ["SUPABASE_ANON_KEY"] = s_key
-                    
-                    with st.spinner("Sincronizando..."):
-                        nuvem = load_leads()
-                        st.session_state["leads"] = nuvem if nuvem else (st.session_state.get("leads") or [])
-                        if st.session_state["leads"]:
-                            save_leads(st.session_state["leads"])
-                        st.success("✅ Sincronizado!")
-                        st.rerun()
-
-        # ── Chaves de API (Google/OAB) ──
-        with st.expander("🔑 CHAVES DE ENRIQUECIMENTO (OPCIONAL)"):
-            st.markdown("<p style='font-size:11px;color:#64748B'>Chaves necessárias para busca automática de site e OAB no Google.</p>", unsafe_allow_html=True)
-            g_key = st.text_input("Google API Key", value=os.environ.get("GOOGLE_API_KEY", ""), type="password")
-            g_cse = st.text_input("Google CSE ID", value=os.environ.get("GOOGLE_CSE_ID", ""), type="password")
-            
-            if st.button("💾 Salvar Chaves", use_container_width=True):
-                os.environ["GOOGLE_API_KEY"] = g_key
-                os.environ["GOOGLE_CSE_ID"] = g_cse
-                st.success("Chaves salvas p/ esta sessão!")
-
-        # ── Manutenção ──
-        if st.session_state.get("leads"):
-            st.divider()
-            if st.button("🔥 RECALCULAR TODOS OS SCORES", use_container_width=True):
-                info_placeholder = st.empty()
-                info_placeholder.info("🕗 Reprocessando leads... por favor aguarde.")
-                
-                novos_leads = []
-                bar = st.progress(0)
-                tot = len(st.session_state["leads"])
-                for i, l in enumerate(st.session_state["leads"]):
-                    novos_leads.append(calcular_score(l))
-                    bar.progress((i+1)/tot)
-                
-                st.session_state["leads"] = novos_leads
-                save_leads(novos_leads)
-                info_placeholder.success("✅ Scores atualizados e salvos!")
-                st.rerun()
-
-
-def _nav_btn(label: str, pagina_destino: str, ativo: bool):
-    """Botão de navegação da sidebar — muda de página ao clicar."""
-    style = (
-        "background:#162032!important;color:#F1F5F9!important;"
-        "border:1px solid #2D4A6E!important;font-weight:700!important;"
-        if ativo else ""
-    )
-    # Injetar estilo inline via container
-    if ativo:
+        # Indicador de salvamento automático
         st.markdown(
-            f"<style>#btn_{pagina_destino.replace('-','_')} button"
-            f"{{background:#162032!important;color:#F59E0B!important;"
-            f"border:1px solid #F59E0B!important;font-weight:700!important}}</style>"
-            f"<span id='btn_{pagina_destino.replace('-','_')}'></span>",
+            "<div style='margin-top:20px;padding:8px 12px;background:#0A1628;border-radius:8px;"
+            "border:1px solid #1E3050;text-align:center'>"
+            "<span style='font-size:11px;color:#64748B'>💾 Dados salvos automaticamente</span>"
+            "</div>",
             unsafe_allow_html=True,
         )
-    if st.button(label, use_container_width=True, key=f"nav_{pagina_destino}"):
-        st.session_state["pagina"] = pagina_destino
-        st.rerun()
 
 
-# ── Tela Upload / Admin ───────────────────────────────────────────────────────
-def tela_upload_admin(leads: list[dict]):
-    # Stats dos leads atuais
-    if leads:
-        total = len(leads)
-        disponiveis = sum(1 for l in leads if not l.get("closer"))
-        atribuidos = total - disponiveis
-        st.markdown(
-            "<h3 style='color:#F1F5F9;font-weight:700;margin-bottom:16px'>Base de leads atual</h3>",
-            unsafe_allow_html=True,
-        )
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total de leads", total)
-        c2.metric("Disponíveis", disponiveis)
-        c3.metric("Atribuídos", atribuidos)
-        c4.metric(
-            "Closers ativos",
-            len([s for s in CLOSERS if any(l.get("closer") == s for l in leads)]),
-        )
-        st.divider()
+# ── Upload ────────────────────────────────────────────────────────────────────
+def tela_upload(leads: list[dict]):
+    total = len(leads)
 
-    # Upload de nova base
     st.markdown(
-        "<h3 style='color:#F1F5F9;font-weight:700;margin-bottom:4px'>Enviar nova planilha</h3>"
-        "<p style='color:#94A3B8;margin-bottom:20px'>Um novo upload substitui toda a base atual "
-        "e reseta as atribuições dos closers.</p>",
+        "<h2 style='color:#F1F5F9;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px'>"
+        "⬆️ Adicionar leads</h2>"
+        "<p style='color:#64748B;margin-bottom:24px'>"
+        "Cada upload <strong style='color:#F59E0B'>acumula</strong> os novos leads no banco. "
+        "Leads existentes são atualizados sem perder atribuições de closers.</p>",
         unsafe_allow_html=True,
     )
+
+    if total:
+        quentes = sum(1 for l in leads if "Quente" in str(l.get("classificacao", "")))
+        atrib   = sum(1 for l in leads if l.get("closer"))
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total no banco", total)
+        c2.metric("🔥 Leads Quentes", quentes)
+        c3.metric("Atribuídos a closers", atrib)
+        st.divider()
 
     col = st.columns([1, 2, 1])[1]
     with col:
@@ -478,40 +309,39 @@ def tela_upload_admin(leads: list[dict]):
             st.session_state["uploaded_file"] = uploaded
             st.session_state["pagina"] = "processando"
             st.rerun()
-        st.caption("Suporta exportações do Growman IG · Dados são processados localmente")
+        st.caption("Suporta exportações do Growman IG · Filtrado automaticamente para advogados")
 
 
-# ── Tela Processando ──────────────────────────────────────────────────────────
+# ── Processando ───────────────────────────────────────────────────────────────
 def tela_processando():
-    st.markdown(
-        "<h2 style='color:#F1F5F9;font-weight:700'>⏳ Processando leads...</h2>",
-        unsafe_allow_html=True,
-    )
-
     uploaded = st.session_state.get("uploaded_file")
     if not uploaded:
         st.session_state["pagina"] = "upload"
         st.rerun()
         return
 
+    st.markdown(
+        "<h2 style='color:#F1F5F9;font-weight:700'>⏳ Processando leads...</h2>",
+        unsafe_allow_html=True,
+    )
+
     try:
         df, stats = parse_growman_xlsx(uploaded)
     except ValueError as e:
         st.error(f"Erro ao ler o arquivo: {e}")
-        if st.button("Tentar novamente"):
+        if st.button("Voltar"):
             st.session_state["pagina"] = "upload"
             st.rerun()
         return
 
     st.info(
-        f"📊 {stats['total_bruto']} registros no arquivo · "
+        f"📊 {stats['total_bruto']} registros · "
         f"{stats.get('apos_filtro_privado', '?')} públicos · "
         f"**{stats['advogados']} advogados detectados**"
     )
 
     leads_raw = df.to_dict("records")
     total = len(leads_raw)
-
     if total == 0:
         st.warning("Nenhum advogado encontrado. Verifique se o arquivo é do Growman.")
         if st.button("Voltar"):
@@ -519,85 +349,83 @@ def tela_processando():
             st.rerun()
         return
 
-    progress = st.progress(0, text="Iniciando...")
-    status_box = st.empty()
-    preview_container = st.container()
-    leads_processados = []
+    progress    = st.progress(0, text="Iniciando...")
+    status_box  = st.empty()
+    preview     = st.container()
+    processados = []
 
     for i, lead in enumerate(leads_raw):
-        pct = i / total
         nome = lead.get("full_name", lead.get("username", f"Lead {i+1}"))
-        progress.progress(pct, text=f"Processando {i+1}/{total} — {nome}")
+        progress.progress(i / total, text=f"Processando {i+1}/{total} — {nome}")
         status_box.caption(f"⚡ Enriquecendo: {nome}")
-
         try:
             enriched = _enrich_lead(lead)
         except Exception:
             enriched = {**lead, "score": 0, "classificacao": "❄️ Frio",
                         "insight": "Erro no processamento.", "criterios_aplicados": [],
                         "closer": ""}
-
-        leads_processados.append(enriched)
-
+        processados.append(enriched)
         if i < 5:
-            cls = enriched.get("classificacao", "")
-            score = enriched.get("score", 0)
-            nicho = enriched.get("nicho", "")
-            with preview_container:
+            with preview:
+                cls   = enriched.get("classificacao", "")
+                score = enriched.get("score", 0)
+                nicho = enriched.get("nicho", "")
                 st.markdown(f"✓ **{nome}** · {nicho} · Score **{score}** · {cls}")
 
     progress.progress(1.0, text="Concluído!")
     status_box.empty()
 
-    st.session_state["leads"] = leads_processados
+    # ACUMULAR no banco (não substitui)
+    adicionados = add_leads(processados)
+
+    # Recarregar tudo do banco (inclui leads antigos + novos)
+    st.session_state["leads"] = load_leads()
+    st.session_state.pop("uploaded_file", None)
     st.session_state["pagina"] = "dashboard"
-    # Salvar automaticamente ao processar
-    save_leads(leads_processados)
+
+    st.success(f"✅ {adicionados} leads adicionados/atualizados no banco!")
     st.rerun()
 
 
-# ── Roteador principal ────────────────────────────────────────────────────────
+# ── Roteador ──────────────────────────────────────────────────────────────────
 def main():
-    # ── Processar atribuição pendente (event-first) ──
+    # Processar atribuição antes de qualquer render
     if "assign_action" in st.session_state:
-        action = st.session_state.pop("assign_action")
+        action   = st.session_state.pop("assign_action")
         username = action["username"]
         closer   = action["closer"]
-        # Gravar só esse lead no banco — não reescreve tudo
         update_closer(username, closer)
-        # Sincronizar session_state
         for lead in st.session_state.get("leads", []):
             if lead.get("username") == username:
                 lead["closer"] = closer
                 break
 
-    # ── Carregar leads na inicialização ──
+    # Carregar leads do banco na primeira vez
     if "leads" not in st.session_state:
-        carregados = load_leads()
-        st.session_state["leads"] = carregados or []
+        st.session_state["leads"] = load_leads()
 
-    # ── Página padrão ──
+    # Página padrão
     if "pagina" not in st.session_state:
         st.session_state["pagina"] = "dashboard" if st.session_state["leads"] else "upload"
 
-    leads = st.session_state["leads"]
+    leads  = st.session_state["leads"]
     pagina = st.session_state["pagina"]
 
-    # ── Sidebar (sempre visível, exceto durante processamento) ──
+    # Sidebar sempre visível (exceto processando)
     if pagina != "processando":
         render_sidebar(leads, pagina)
 
-    # ── Roteamento ──
+    # Roteamento
     if pagina == "upload":
-        tela_upload_admin(leads)
+        tela_upload(leads)
     elif pagina == "processando":
         tela_processando()
     elif pagina == "dashboard":
         render_dashboard(leads)
     elif pagina.startswith("closer_"):
-        closer_slug = pagina.replace("closer_", "")
-        closer_nome = CLOSERS.get(closer_slug, closer_slug.capitalize())
-        render_closer_panel(leads, closer_slug, closer_nome)
+        slug  = pagina.replace("closer_", "")
+        nome  = CLOSERS.get(slug, slug.capitalize())
+        render_closer_panel(leads, slug, nome)
 
 
 if __name__ == "__main__":
