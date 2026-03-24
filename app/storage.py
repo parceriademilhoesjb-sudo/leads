@@ -24,6 +24,15 @@ def _conn() -> sqlite3.Connection:
             updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    # Migração: Adicionar coluna score se não existir
+    try:
+        cursor = c.cursor()
+        cursor.execute("PRAGMA table_info(leads)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if "score" not in columns:
+            c.execute("ALTER TABLE leads ADD COLUMN score INTEGER NOT NULL DEFAULT 0")
+    except:
+        pass
     c.commit()
     return c
 
