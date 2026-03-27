@@ -249,6 +249,29 @@ def update_closer(username: str, closer: str) -> None:
     c.close()
 
 
+def update_proposta(username: str, proposta: dict) -> None:
+    """Salva ou atualiza a proposta de um lead."""
+    if _IS_PYODIDE:
+        leads = _ls_load()
+        for lead in leads:
+            if lead.get("username") == username:
+                lead["proposta"] = proposta
+                break
+        _ls_save(leads)
+        return
+    c = _conn()
+    row = c.execute("SELECT data FROM leads WHERE username = ?", (username,)).fetchone()
+    if row:
+        lead = json.loads(row[0])
+        lead["proposta"] = proposta
+        c.execute(
+            "UPDATE leads SET data = ?, updated_at = datetime('now') WHERE username = ?",
+            (json.dumps(lead, ensure_ascii=False, default=str), username),
+        )
+    c.commit()
+    c.close()
+
+
 def delete_lead(username: str) -> None:
     """Remove um lead do banco permanentemente."""
     if _IS_PYODIDE:

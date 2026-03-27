@@ -18,7 +18,7 @@ from scoring.engine import calcular_score
 from ui.dashboard import render_dashboard
 from ui.closer_panel import render_closer_panel
 from ui.sync_panel import render_sync_panel
-from storage import add_leads, load_leads, update_closer, delete_lead
+from storage import add_leads, load_leads, update_closer, delete_lead, update_proposta
 
 CLOSERS = {
     "matheus":  "Matheus",
@@ -649,6 +649,17 @@ def main():
         for lead in st.session_state.get("leads", []):
             if lead.get("username") == username:
                 lead["closer"] = closer
+                break
+
+    # Processar proposta
+    if "proposta_action" in st.session_state:
+        action   = st.session_state.pop("proposta_action")
+        username = action["username"]
+        proposta = action["proposta"]
+        update_proposta(username, proposta)
+        for lead in st.session_state.get("leads", []):
+            if lead.get("username") == username:
+                lead["proposta"] = proposta
                 break
 
     # Processar exclusão

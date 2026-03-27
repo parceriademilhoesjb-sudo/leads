@@ -158,6 +158,79 @@ def render_lead_card(lead: dict, show_assign: bool = False):
                     }
                     st.rerun()
 
+        # ── Proposta ──────────────────────────────────────────────────────────
+        st.divider()
+        proposta = lead.get("proposta") or {}
+        tem_proposta = bool(proposta.get("valor") or proposta.get("texto"))
+
+        if tem_proposta:
+            st.markdown(f"""
+<div style="background:linear-gradient(135deg,rgba(80,112,176,0.12) 0%,rgba(5,10,21,0.6) 100%);
+  border:1px solid rgba(80,112,176,0.3);border-radius:16px;padding:20px 24px;margin-bottom:12px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <span style="font-size:1.1rem">📋</span>
+    <span style="color:#90c0e0;font-size:11px;font-weight:800;text-transform:uppercase;
+      letter-spacing:1.5px">Proposta Enviada</span>
+    {"<span style='background:rgba(144,192,224,0.15);color:#90c0e0;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-left:auto;border:1px solid rgba(144,192,224,0.25)'>" + proposta.get('status','') + "</span>" if proposta.get('status') else ""}
+  </div>
+  {"<div style='font-size:2rem;font-weight:800;color:#fff;font-family:Manrope;margin-bottom:8px'>R$ " + proposta.get('valor','') + "</div>" if proposta.get('valor') else ""}
+  {"<div style='color:#b0c0d0;font-size:0.9rem;line-height:1.6;white-space:pre-wrap'>" + proposta.get('texto','') + "</div>" if proposta.get('texto') else ""}
+</div>
+""", unsafe_allow_html=True)
+
+        # Formulário de proposta (toggle)
+        form_key = f"show_proposta_{username}"
+        if not st.session_state.get(form_key):
+            label = "✏️ Editar Proposta" if tem_proposta else "📋 Adicionar Proposta"
+            if st.button(label, key=f"btn_proposta_{username}", use_container_width=False):
+                st.session_state[form_key] = True
+                st.rerun()
+        else:
+            st.markdown(
+                "<p style='color:#90c0e0;font-size:11px;font-weight:800;text-transform:uppercase;"
+                "letter-spacing:1px;margin-bottom:10px'>Nova Proposta</p>",
+                unsafe_allow_html=True,
+            )
+            p1, p2 = st.columns([1, 2])
+            with p1:
+                valor_input = st.text_input(
+                    "Valor (R$)",
+                    value=proposta.get("valor", ""),
+                    key=f"prop_valor_{username}",
+                    placeholder="Ex: 12.000",
+                )
+                status_input = st.selectbox(
+                    "Status",
+                    options=["Em negociação", "Enviada", "Fechada", "Recusada"],
+                    index=["Em negociação","Enviada","Fechada","Recusada"].index(proposta.get("status","Em negociação")) if proposta.get("status") in ["Em negociação","Enviada","Fechada","Recusada"] else 0,
+                    key=f"prop_status_{username}",
+                )
+            with p2:
+                texto_input = st.text_area(
+                    "Descrição / Observações",
+                    value=proposta.get("texto", ""),
+                    key=f"prop_texto_{username}",
+                    height=100,
+                    placeholder="Descreva a proposta, serviços incluídos, condições...",
+                )
+            s1, s2, _ = st.columns([1, 1, 3])
+            with s1:
+                if st.button("💾 Salvar", key=f"prop_save_{username}", use_container_width=True):
+                    st.session_state["proposta_action"] = {
+                        "username": username,
+                        "proposta": {
+                            "valor": valor_input,
+                            "texto": texto_input,
+                            "status": status_input,
+                        },
+                    }
+                    st.session_state.pop(form_key, None)
+                    st.rerun()
+            with s2:
+                if st.button("Cancelar", key=f"prop_cancel_{username}", use_container_width=True):
+                    st.session_state.pop(form_key, None)
+                    st.rerun()
+
         # ── Excluir lead ──────────────────────────────────────────────────────
         st.divider()
         col_del, _ = st.columns([1, 5])
