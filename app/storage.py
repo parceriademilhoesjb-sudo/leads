@@ -153,22 +153,44 @@ def add_leads(novos: list[dict]) -> int:
     return count
 
 
+def _carregar_crm_json_pyodide() -> list[dict]:
+    """Carrega crm.json de forma confiável no ambiente Pyodide/stlite."""
+    # Tentativa 1: pyodide.http (fetch síncrono nativo do Pyodide)
+    try:
+        from pyodide.http import open_url  # type: ignore
+        raw = open_url("/data/crm.json").getvalue()
+        dados = json.loads(raw)
+        if dados:
+            return dados
+    except Exception:
+        pass
+
+    # Tentativa 2: filesystem montado pelo stlite
+    for p in [
+        Path(__file__).parent.parent / "data" / "crm.json",
+        Path("/home/pyodide/data/crm.json"),
+    ]:
+        try:
+            if p.exists():
+                with open(p, encoding="utf-8") as f:
+                    dados = json.load(f)
+                if dados:
+                    return dados
+        except Exception:
+            pass
+
+    return []
+
+
 def load_leads() -> list[dict]:
     """Carrega todos os leads ordenados por score desc."""
     if _IS_PYODIDE:
         leads = _ls_load()
         if not leads:
-            # Primeira visita: tenta carregar crm.json incluído pelo stlite
-            try:
-                json_path = Path(__file__).parent.parent / "data" / "crm.json"
-                if json_path.exists():
-                    with open(json_path, encoding="utf-8") as f:
-                        legado = json.load(f)
-                    if legado:
-                        add_leads(legado)
-                        leads = _ls_load()
-            except Exception:
-                pass
+            legado = _carregar_crm_json_pyodide()
+            if legado:
+                add_leads(legado)
+                leads = _ls_load()
         return leads
 
     # SQLite
