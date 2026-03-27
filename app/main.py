@@ -18,7 +18,7 @@ from scoring.engine import calcular_score
 from ui.dashboard import render_dashboard
 from ui.closer_panel import render_closer_panel
 from ui.sync_panel import render_sync_panel
-from storage import add_leads, load_leads, update_closer
+from storage import add_leads, load_leads, update_closer, delete_lead
 
 CLOSERS = {
     "matheus":  "Matheus",
@@ -650,6 +650,16 @@ def main():
             if lead.get("username") == username:
                 lead["closer"] = closer
                 break
+
+    # Processar exclusão
+    if "delete_action" in st.session_state:
+        action   = st.session_state.pop("delete_action")
+        username = action["username"]
+        delete_lead(username)
+        st.session_state["leads"] = [
+            l for l in st.session_state.get("leads", [])
+            if l.get("username") != username
+        ]
 
     # Carregar leads do banco na primeira vez
     if "leads" not in st.session_state:

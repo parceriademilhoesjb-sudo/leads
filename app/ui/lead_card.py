@@ -158,6 +158,14 @@ def render_lead_card(lead: dict, show_assign: bool = False):
                     }
                     st.rerun()
 
+        # ── Excluir lead ──────────────────────────────────────────────────────
+        st.divider()
+        col_del, _ = st.columns([1, 5])
+        with col_del:
+            if st.button("🗑️ Excluir lead", key=f"del_btn_{username}", use_container_width=True):
+                st.session_state["delete_action"] = {"username": username}
+                st.rerun()
+
         # ── Score breakdown ───────────────────────────────────────────────────
         criterios = lead.get("criterios_aplicados", [])
         if criterios:

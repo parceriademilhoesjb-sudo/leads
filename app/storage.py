@@ -227,6 +227,19 @@ def update_closer(username: str, closer: str) -> None:
     c.close()
 
 
+def delete_lead(username: str) -> None:
+    """Remove um lead do banco permanentemente."""
+    if _IS_PYODIDE:
+        leads = _ls_load()
+        leads = [l for l in leads if l.get("username") != username]
+        _ls_save(leads)
+        return
+    c = _conn()
+    c.execute("DELETE FROM leads WHERE username = ?", (username,))
+    c.commit()
+    c.close()
+
+
 def total_leads() -> int:
     if _IS_PYODIDE:
         return len(_ls_load())
