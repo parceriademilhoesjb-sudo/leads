@@ -5,123 +5,120 @@ lead_card.py — Card expandido de cada lead no dashboard.
 import streamlit as st
 
 
-def _badge(label: str, color: str) -> str:
-    return f'<span style="background:{color};color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">{label}</span>'
-
-
 def _classificacao_color(cls: str) -> str:
     if "Quente" in cls:
-        return "#EF4444"
+        return "#90c0e0"
     if "Morno" in cls:
-        return "#F59E0B"
-    return "#3B82F6"
+        return "#5070b0"
+    return "#306090"
 
 
 def render_lead_card(lead: dict, show_assign: bool = False):
     """Renderiza o card expandido de um lead dentro de um st.expander."""
-    cls = lead.get("classificacao", "")
+    cls   = lead.get("classificacao", "")
     score = lead.get("score", 0)
-    color = _classificacao_color(cls)
 
     with st.expander(
         f"{cls}  ·  Score {score}/100  ·  @{lead.get('username', '')}  —  {lead.get('full_name', '')}",
         expanded=False,
     ):
-        col1, col2 = st.columns([1, 3])
+        username  = lead.get("username", "")
+        full_name = lead.get("full_name", "")
+        initial   = (full_name or username or "?")[0].upper()
+        closer    = lead.get("closer", "")
+        color     = _classificacao_color(cls)
 
-        with col1:
-            avatar_url = str(lead.get("avatar_url", "")).strip()
-            username = lead.get("username", "")
-            initial = (lead.get("full_name") or username or "?")[0].upper()
-            fallback_html = (
-                f'<div style="width:80px;height:80px;border-radius:50%;background:#1E3050;'
-                f'border:2px solid #2D4A6E;display:flex;align-items:center;justify-content:center;'
-                f'font-size:28px;font-weight:700;color:#F59E0B">{initial}</div>'
-            )
-            if avatar_url and avatar_url.lower() not in ("nan", "none", "0", "") and avatar_url.startswith("http"):
-                st.markdown(
-                    f'<img src="{avatar_url}" width="80" height="80" '
-                    f'style="border-radius:50%;object-fit:cover;border:2px solid #2D4A6E;display:block" '
-                    f'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" />'
-                    f'{fallback_html.replace("display:flex", "display:none")}',
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(fallback_html, unsafe_allow_html=True)
+        closer_badge = (
+            f"<span style='background:rgba(144,192,224,0.1);color:#90c0e0;padding:2px 10px;"
+            f"border-radius:99px;font-size:11px;font-weight:800;margin-left:8px;"
+            f"border:1px solid rgba(144,192,224,0.2)'>👤 {closer.capitalize()}</span>"
+            if closer else ""
+        )
 
-        with col2:
-            st.markdown(
-                f"<h3 style='margin:0;color:#F1F5F9;font-weight:700'>{lead.get('full_name','')}</h3>"
-                f"<p style='margin:4px 0;color:#94A3B8'>@{lead.get('username','')} · "
-                f"⚖️ {lead.get('nicho','Geral')} · "
-                f"{lead.get('followers',0):,} seguidores</p>",
-                unsafe_allow_html=True,
-            )
+        # ── Header: avatar + nome ──────────────────────────────────────────────
+        st.markdown(f"""
+<div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">
+  <div style="width:72px;height:72px;border-radius:50%;background:#0a1628;flex-shrink:0;
+    border:2px solid rgba(80,112,176,0.5);display:flex;align-items:center;justify-content:center;
+    font-size:26px;font-weight:800;color:#90c0e0;font-family:'Manrope',sans-serif">
+    {initial}
+  </div>
+  <div>
+    <div style="font-size:1.3rem;font-weight:800;color:#fff;font-family:'Manrope',sans-serif">
+      {full_name}{closer_badge}
+    </div>
+    <div style="color:#b0c0d0;font-size:0.875rem;margin-top:2px">
+      @{username} · <span style="color:#90c0e0">⚖️ {lead.get('nicho','Geral')}</span>
+      · {lead.get('followers',0):,} seguidores
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
         st.divider()
 
-        # ── Dados estruturados ────────────────────────────────────────────────
-        col_oab, col_cnpj, col_site = st.columns(3)
+        # ── OAB / CNPJ / Site — uma única chamada st.markdown ─────────────────
+        oab_html = ""
+        if lead.get("oab_encontrado"):
+            anos = lead.get("oab_anos_ativo")
+            anos_txt = f"<br><small style='color:#64748b'>Inscrito há {anos:.0f} ano(s)</small>" if anos is not None else ""
+            oab_html = (
+                f"<strong style='color:#e2e8f0'>{lead.get('oab_numero','')} "
+                f"{lead.get('oab_seccional','')}</strong> — {lead.get('oab_situacao','')}{anos_txt}"
+            )
+        else:
+            oab_html = "<span style='color:#64748b;font-size:12px'>Não encontrado</span>"
 
-        with col_oab:
-            st.markdown("**OAB**")
-            if lead.get("oab_encontrado"):
-                st.markdown(
-                    f"**{lead.get('oab_numero','')} {lead.get('oab_seccional','')}** — "
-                    f"{lead.get('oab_situacao','')}"
-                )
-                anos = lead.get("oab_anos_ativo")
-                if anos is not None:
-                    st.caption(f"Inscrito há {anos:.0f} ano(s)")
-            else:
-                st.caption("Não encontrado")
+        cnpj_html = ""
+        if lead.get("cnpj_numero"):
+            cnpj_html = (
+                f"<span style='color:#e2e8f0'>{lead.get('cnpj_razao_social', lead.get('cnpj_numero',''))}</span>"
+                f"<br><small style='color:#64748b'>{lead.get('cnpj_situacao','')}</small>"
+            )
+        else:
+            cnpj_html = "<span style='color:#64748b;font-size:12px'>Não encontrado</span>"
 
-        with col_cnpj:
-            st.markdown("**CNPJ**")
-            if lead.get("cnpj_numero"):
-                st.markdown(lead.get("cnpj_razao_social", lead.get("cnpj_numero", "")))
-                st.caption(lead.get("cnpj_situacao", ""))
-            else:
-                st.caption("Não encontrado")
+        site_html = ""
+        if lead.get("site_encontrado"):
+            site_url = lead.get("site_url", "")
+            pixels = []
+            if lead.get("has_fb_pixel"):  pixels.append("Pixel FB")
+            if lead.get("has_ga"):        pixels.append("GA/GTM")
+            if lead.get("has_google_ads"): pixels.append("Google Ads")
+            pixel_txt = (
+                f"<br><small style='color:#64748b'>✓ {' · '.join(pixels)}</small>"
+                if pixels else "<br><small style='color:#64748b'>⚠️ Sem rastreamento</small>"
+            )
+            disp = site_url[:38] + "…" if len(site_url) > 38 else site_url
+            site_html = f"<a href='{site_url}' target='_blank' style='color:#90c0e0'>{disp}</a>{pixel_txt}"
+        else:
+            site_html = "<span style='color:#64748b;font-size:12px'>Não encontrado +20pts</span>"
 
-        with col_site:
-            st.markdown("**Site**")
-            if lead.get("site_encontrado"):
-                site_url = lead.get("site_url", "")
-                st.markdown(f"[{site_url[:40]}...]({site_url})" if len(site_url) > 40 else f"[{site_url}]({site_url})")
-                pixels = []
-                if lead.get("has_fb_pixel"):
-                    pixels.append("Pixel FB")
-                if lead.get("has_ga"):
-                    pixels.append("GA/GTM")
-                if lead.get("has_google_ads"):
-                    pixels.append("Google Ads")
-                if pixels:
-                    st.caption("✓ " + " · ".join(pixels))
-                else:
-                    st.caption("⚠️ Sem rastreamento")
-            else:
-                st.caption("Não encontrado +20pts")
+        label_style = "color:#94a3b8;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px"
+        st.markdown(f"""
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:8px 0">
+  <div><div style="{label_style}">OAB</div>{oab_html}</div>
+  <div><div style="{label_style}">CNPJ</div>{cnpj_html}</div>
+  <div><div style="{label_style}">Site</div>{site_html}</div>
+</div>
+""", unsafe_allow_html=True)
 
         # ── Contatos ──────────────────────────────────────────────────────────
-        st.divider()
         phone = lead.get("phone_full", "") or lead.get("phone_from_bio", "")
         email = lead.get("email", "")
 
+        st.divider()
         contact_cols = st.columns(3)
         with contact_cols[0]:
             if phone:
                 st.markdown(f"📱 `{phone}`")
-                wa_url = f"https://wa.me/{phone.lstrip('+')}"
-                st.link_button("WhatsApp", wa_url, use_container_width=True)
-
+                st.link_button("WhatsApp", f"https://wa.me/{phone.lstrip('+')}", use_container_width=True)
         with contact_cols[1]:
             if email:
                 st.markdown(f"✉️ `{email}`")
                 st.link_button("Email", f"mailto:{email}", use_container_width=True)
-
         with contact_cols[2]:
-            ig_url = lead.get("profile_url", f"https://instagram.com/{lead.get('username','')}")
+            ig_url = lead.get("profile_url", f"https://instagram.com/{username}")
             st.link_button("Ver Instagram", ig_url, use_container_width=True)
 
         # ── Insight ───────────────────────────────────────────────────────────
@@ -134,7 +131,7 @@ def render_lead_card(lead: dict, show_assign: bool = False):
         if show_assign:
             st.divider()
             st.markdown(
-                "<p style='color:#64748B;font-size:11px;font-weight:700;"
+                "<p style='color:#b0c0d0;font-size:11px;font-weight:700;"
                 "text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px'>"
                 "Atribuir para closer</p>",
                 unsafe_allow_html=True,
@@ -164,14 +161,20 @@ def render_lead_card(lead: dict, show_assign: bool = False):
         # ── Score breakdown ───────────────────────────────────────────────────
         criterios = lead.get("criterios_aplicados", [])
         if criterios:
-            st.markdown("<p style='color:#64748B;font-size:11px;font-weight:700;margin-top:16px'>DETALHAMENTO DO SCORE</p>", unsafe_allow_html=True)
             from scoring.engine import CRITERIOS
+            linhas = []
             for c in criterios:
                 pts = CRITERIOS.get(c, 0)
-                color_pt = "#16A34A" if pts > 0 else "#DC2626"
-                sign = "+" if pts > 0 else ""
-                st.markdown(
-                    f"<span style='color:{color_pt};font-weight:600'>{sign}{pts}pts</span> "
-                    f"<span style='color:#94A3B8'>{c}</span>",
-                    unsafe_allow_html=True,
+                cor = "#90c0e0" if pts > 0 else "#EF4444"
+                sinal = "+" if pts > 0 else ""
+                linhas.append(
+                    f"<div style='display:flex;align-items:center;gap:8px;margin-bottom:4px'>"
+                    f"<span style='color:{cor};font-weight:800;font-size:12px;min-width:45px'>{sinal}{pts}pts</span>"
+                    f"<span style='color:#b0c0d0;font-size:12px'>{c}</span></div>"
                 )
+            st.markdown(
+                "<p style='color:#b0c0d0;font-size:10px;font-weight:800;margin-top:20px;"
+                "letter-spacing:1px;text-transform:uppercase'>Detalhamento do Score</p>"
+                + "".join(linhas),
+                unsafe_allow_html=True,
+            )

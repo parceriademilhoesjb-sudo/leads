@@ -17,6 +17,7 @@ from enrichment.site_checker import check_site
 from scoring.engine import calcular_score
 from ui.dashboard import render_dashboard
 from ui.closer_panel import render_closer_panel
+from ui.sync_panel import render_sync_panel
 from storage import add_leads, load_leads, update_closer
 
 CLOSERS = {
@@ -35,156 +36,405 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@200;400;600;700;800&display=swap');
 
+/* ══════════════════════════════════════════════
+   PULSE DESIGN SYSTEM — OAB Lead Qualifier CRM
+   Inspirado no pulse.html · Agência Avestra
+   ══════════════════════════════════════════════ */
+
+/* ── Animations ── */
+@keyframes animStar {
+    from { transform: translateY(0px); }
+    to   { transform: translateY(-2000px); }
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(80, 112, 176, 0.15); }
+    50%       { box-shadow: 0 0 40px rgba(80, 112, 176, 0.35); }
+}
+@keyframes shimmerBorder {
+    from { background-position: 0% 50%; }
+    to   { background-position: 100% 50%; }
+}
+
+/* ── Base ── */
 html, body, [class*="css"], .stApp {
     font-family: 'Inter', sans-serif !important;
-    background-color: #0D1B2A !important;
-    color: #F1F5F9 !important;
+    color: #e8eaf0 !important;
 }
+
+/* ── Background: deep space with stars ── */
+body {
+    background: #050a15 !important;
+}
+
+.stApp {
+    background:
+        radial-gradient(ellipse 80% 50% at 50% 0%,   rgba(80, 112, 176, 0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 20% 60%,  rgba(32,  64, 128, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 50% at 80% 80%,  rgba(80, 112, 176, 0.04) 0%, transparent 50%),
+        linear-gradient(to bottom, #0a1128 0%, #050a15 100%) !important;
+    min-height: 100vh;
+}
+
+/* Stars layer 1 — tiny white dots */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 1px; height: 1px;
+    background: transparent;
+    box-shadow:
+        234px 124px #fff, 654px 345px #fff, 876px 12px #fff,
+        1200px 800px #fff, 400px 1500px #fff, 1800px 200px #fff,
+        100px 1000px #fff, 900px 1900px #fff, 500px 600px #fff,
+        1400px 100px #fff, 300px 400px #fff, 1600px 1200px #fff,
+        50px 300px #fff, 750px 1100px #fff, 1100px 1600px #fff,
+        1700px 700px #fff, 200px 1800px #fff, 950px 50px #fff,
+        60px 1400px #fff, 1350px 450px #fff, 780px 780px #fff,
+        1050px 350px #fff, 450px 950px #fff, 1550px 650px #fff,
+        320px 1250px #fff, 680px 1700px #fff, 1150px 900px #fff,
+        840px 250px #fff, 1480px 1350px #fff, 120px 550px #fff;
+    animation: animStar 60s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Stars layer 2 — blue accent dots */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 2px; height: 2px;
+    background: transparent;
+    box-shadow:
+        123px 456px rgba(80,112,176,0.6),
+        789px 234px rgba(80,112,176,0.4),
+        456px 890px rgba(144,192,224,0.5),
+        1100px 300px rgba(80,112,176,0.5),
+        200px 1200px rgba(144,192,224,0.3),
+        1500px 500px rgba(80,112,176,0.4),
+        600px 1700px rgba(144,192,224,0.5),
+        1300px 900px rgba(80,112,176,0.3),
+        350px 750px rgba(144,192,224,0.4),
+        850px 1400px rgba(80,112,176,0.6),
+        1650px 1050px rgba(144,192,224,0.3),
+        500px 200px rgba(80,112,176,0.5),
+        1100px 1600px rgba(144,192,224,0.4),
+        250px 1600px rgba(80,112,176,0.3);
+    animation: animStar 90s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Grid overlay */
+.stApp > * { position: relative; z-index: 1; }
+.stApp::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ── Header ── */
 header[data-testid="stHeader"] {
-    background-color: #0A1628 !important;
-    border-bottom: 1px solid #1E3050;
+    background: rgba(5, 10, 21, 0.7) !important;
+    border-bottom: 1px solid rgba(80, 112, 176, 0.15) !important;
+    backdrop-filter: blur(20px) !important;
 }
+
+/* ── Main content container ── */
 .block-container {
-    max-width: 1280px !important;
-    padding-top: 1.5rem !important;
-    padding-bottom: 3rem !important;
+    max-width: 1320px !important;
+    padding-top: 2rem !important;
+    padding-bottom: 4rem !important;
 }
 
 /* ── Sidebar ── */
 section[data-testid="stSidebar"] {
-    background-color: #0A1628 !important;
-    border-right: 1px solid #1E3050;
+    background: rgba(5, 10, 21, 0.85) !important;
+    border-right: 1px solid rgba(80, 112, 176, 0.15) !important;
+    backdrop-filter: blur(20px) !important;
 }
-section[data-testid="stSidebar"] .block-container {
-    padding-top: 1rem !important;
-}
-/* Botões da sidebar: fundo transparente por padrão */
+
 section[data-testid="stSidebar"] .stButton > button {
     background: transparent !important;
-    border: none !important;
-    color: #94A3B8 !important;
+    border: 1px solid transparent !important;
+    color: #94a3b8 !important;
     font-weight: 500 !important;
     text-align: left !important;
-    padding: 8px 12px !important;
-    border-radius: 8px !important;
-    width: 100% !important;
-    transition: all 0.15s !important;
-    font-size: 14px !important;
-}
-section[data-testid="stSidebar"] .stButton > button:hover {
-    background: #162032 !important;
-    color: #F1F5F9 !important;
-    border: none !important;
-}
-
-/* ── Métricas ── */
-div[data-testid="metric-container"] {
-    background: #162032 !important;
-    border: 1px solid #2D4A6E !important;
+    padding: 12px 16px !important;
     border-radius: 12px !important;
-    padding: 16px 20px !important;
-    transition: border-color 0.2s;
+    width: 100% !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-size: 14px !important;
+    font-family: 'Manrope', sans-serif !important;
+    letter-spacing: 0.2px;
 }
-div[data-testid="metric-container"]:hover { border-color: #F59E0B !important; }
-div[data-testid="metric-container"] label { color: #94A3B8 !important; font-size: 13px !important; }
+
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(80, 112, 176, 0.1) !important;
+    color: #90c0e0 !important;
+    border-color: rgba(80, 112, 176, 0.25) !important;
+    transform: translateX(4px) !important;
+}
+
+/* ── Metrics (Streamlit native) ── */
+div[data-testid="metric-container"] {
+    background: linear-gradient(135deg,
+        rgba(80, 112, 176, 0.08) 0%,
+        rgba(5, 10, 21, 0.6) 100%) !important;
+    border: 1px solid rgba(80, 112, 176, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(12px) !important;
+    animation: pulseGlow 4s ease-in-out infinite;
+}
+
+div[data-testid="metric-container"]:hover {
+    border-color: rgba(144, 192, 224, 0.4) !important;
+    background: linear-gradient(135deg,
+        rgba(80, 112, 176, 0.18) 0%,
+        rgba(5, 10, 21, 0.7) 100%) !important;
+    transform: translateY(-4px) !important;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6),
+                0 0 30px rgba(80, 112, 176, 0.15) !important;
+}
+
+div[data-testid="metric-container"] label {
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.5px !important;
+}
+
 div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-    color: #F1F5F9 !important; font-size: 2rem !important; font-weight: 700 !important;
+    color: #ffffff !important;
+    font-size: 2.4rem !important;
+    font-weight: 800 !important;
+    font-family: 'Manrope', sans-serif !important;
+    text-shadow: 0 0 25px rgba(144, 192, 224, 0.4) !important;
 }
 
-/* ── Expanders ── */
-details {
-    background: #162032 !important;
-    border: 1px solid #2D4A6E !important;
-    border-radius: 10px !important;
-    margin-bottom: 10px !important;
-    overflow: hidden;
+/* ── Expander / Lead Cards ── */
+details, .stExpander {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.025) 0%,
+        rgba(5, 10, 21, 0.4) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(8px) !important;
+    overflow: hidden !important;
 }
+
+details:hover, .stExpander:hover {
+    background: linear-gradient(135deg,
+        rgba(80, 112, 176, 0.06) 0%,
+        rgba(5, 10, 21, 0.5) 100%) !important;
+    border-color: rgba(80, 112, 176, 0.25) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(80, 112, 176, 0.08) !important;
+    transform: translateY(-2px) !important;
+}
+
 details summary {
-    padding: 14px 18px !important;
-    color: #F1F5F9 !important;
-    font-weight: 500 !important;
-    cursor: pointer;
-    background: #162032 !important;
+    padding: 18px 22px !important;
+    color: #e2e8f0 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    background: transparent !important;
+    letter-spacing: 0.2px;
 }
-details summary:hover { background: #1E3050 !important; }
-details[open] summary { border-bottom: 1px solid #2D4A6E; }
-details > div { padding: 16px 18px !important; }
 
-/* ── Botões gerais ── */
+details summary:hover { color: #ffffff !important; }
+details[open] summary { border-bottom: 1px solid rgba(80, 112, 176, 0.15) !important; }
+details > div { padding: 20px 22px !important; }
+
+/* ── Buttons — Pulse style ── */
 .block-container .stButton > button {
-    border-radius: 8px !important;
-    background: #1E3050 !important;
-    color: #F1F5F9 !important;
-    border: 1px solid #2D4A6E !important;
-    font-weight: 600 !important;
-    padding: 8px 16px !important;
-    transition: all 0.2s !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, #4060a0 0%, #5070b0 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(144, 192, 224, 0.2) !important;
+    font-weight: 700 !important;
+    padding: 0.6rem 1.8rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-family: 'Manrope', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    font-size: 12px !important;
 }
+
 .block-container .stButton > button:hover {
-    background: #F59E0B !important;
-    color: #0A1628 !important;
-    border-color: #F59E0B !important;
+    background: linear-gradient(135deg, #5070b0 0%, #6090c0 100%) !important;
+    border-color: rgba(144, 192, 224, 0.4) !important;
+    box-shadow: 0 0 25px rgba(80, 112, 176, 0.5),
+                0 8px 20px rgba(0,0,0,0.3) !important;
+    transform: translateY(-2px) !important;
 }
+
+/* Download buttons */
+[data-testid="stDownloadButton"] > button {
+    background: transparent !important;
+    border: 1px solid rgba(144, 192, 224, 0.25) !important;
+    color: #90c0e0 !important;
+}
+
+[data-testid="stDownloadButton"] > button:hover {
+    background: rgba(80, 112, 176, 0.1) !important;
+    border-color: rgba(144, 192, 224, 0.5) !important;
+    box-shadow: 0 0 20px rgba(80, 112, 176, 0.3) !important;
+}
+
+/* Link buttons */
 a[data-testid="stLinkButton"] {
-    border-radius: 8px !important;
-    background: #1E3050 !important;
-    border: 1px solid #2D4A6E !important;
-    color: #F1F5F9 !important;
+    border-radius: 999px !important;
+    background: rgba(80, 112, 176, 0.15) !important;
+    border: 1px solid rgba(80, 112, 176, 0.25) !important;
+    color: #90c0e0 !important;
     font-weight: 600 !important;
-    transition: all 0.2s !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 12px !important;
 }
+
 a[data-testid="stLinkButton"]:hover {
-    background: #F59E0B !important; border-color: #F59E0B !important; color: #0A1628 !important;
+    background: rgba(80, 112, 176, 0.3) !important;
+    border-color: rgba(144, 192, 224, 0.4) !important;
+    box-shadow: 0 0 20px rgba(80, 112, 176, 0.3) !important;
+}
+
+/* ── Selectbox ── */
+[data-testid="stSelectbox"] > div > div {
+    background: rgba(5, 10, 21, 0.6) !important;
+    border: 1px solid rgba(80, 112, 176, 0.2) !important;
+    border-radius: 12px !important;
+    color: #e2e8f0 !important;
+    backdrop-filter: blur(8px) !important;
 }
 
 /* ── File uploader ── */
 [data-testid="stFileUploaderDropzone"] {
-    background: #162032 !important;
-    border: 2px dashed #2D4A6E !important;
+    background: rgba(80, 112, 176, 0.04) !important;
+    border: 2px dashed rgba(80, 112, 176, 0.25) !important;
+    border-radius: 20px !important;
+    transition: all 0.3s ease !important;
+    padding: 40px 20px !important;
+    backdrop-filter: blur(8px);
+}
+
+[data-testid="stFileUploaderDropzone"]:hover {
+    border-color: rgba(80, 112, 176, 0.5) !important;
+    background: rgba(80, 112, 176, 0.08) !important;
+    box-shadow: 0 0 30px rgba(80, 112, 176, 0.1) !important;
+}
+
+/* ── Tabs ── */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background: rgba(5, 10, 21, 0.4) !important;
     border-radius: 12px !important;
-    transition: border-color 0.2s;
+    border: 1px solid rgba(80, 112, 176, 0.15) !important;
+    padding: 4px !important;
+    backdrop-filter: blur(8px);
 }
-[data-testid="stFileUploaderDropzone"]:hover { border-color: #F59E0B !important; }
-[data-testid="stFileUploaderDropzone"] p,
-[data-testid="stFileUploaderDropzone"] span,
-[data-testid="stFileUploaderDropzone"] small { color: #94A3B8 !important; }
 
-/* ── Selectbox ── */
-[data-testid="stSelectbox"] > div > div {
-    background: #162032 !important;
-    border: 1px solid #2D4A6E !important;
+[data-testid="stTabs"] [data-baseweb="tab"] {
     border-radius: 8px !important;
-    color: #F1F5F9 !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease !important;
 }
-[data-testid="stCheckbox"] label { color: #F1F5F9 !important; }
 
-/* ── Download ── */
-[data-testid="stDownloadButton"] > button {
-    background: #F59E0B !important; color: #0A1628 !important;
-    border: none !important; border-radius: 8px !important; font-weight: 700 !important;
+[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+    background: rgba(80, 112, 176, 0.2) !important;
+    color: #90c0e0 !important;
+    box-shadow: 0 0 15px rgba(80, 112, 176, 0.2) !important;
 }
-[data-testid="stDownloadButton"] > button:hover { background: #D97706 !important; }
 
-/* ── Progress ── */
+[data-testid="stTabs"] [role="tabpanel"] {
+    background: transparent !important;
+    border: 1px solid rgba(80, 112, 176, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+/* ── Progress bar ── */
 [data-testid="stProgressBar"] > div > div {
-    background: linear-gradient(90deg, #F59E0B, #EF4444) !important;
-    border-radius: 4px !important;
+    background: linear-gradient(90deg, #204080, #5070b0, #90c0e0) !important;
+    height: 6px !important;
+    border-radius: 3px !important;
+    box-shadow: 0 0 10px rgba(80, 112, 176, 0.5) !important;
 }
 
-/* ── Alert ── */
-[data-testid="stAlert"] { border-radius: 10px !important; border-left-width: 4px !important; }
+/* ── Alerts ── */
+[data-testid="stAlert"] {
+    border-radius: 16px !important;
+    backdrop-filter: blur(8px) !important;
+    border-left-width: 4px !important;
+    background: rgba(80, 112, 176, 0.08) !important;
+}
 
-/* ── Divider / Caption ── */
-hr { border-color: #2D4A6E !important; margin: 16px 0 !important; }
-.stCaption, [data-testid="stCaptionContainer"] { color: #64748B !important; }
+/* ── Divider ── */
+hr {
+    border-color: rgba(80, 112, 176, 0.15) !important;
+    margin: 24px 0 !important;
+}
+
+/* ── Caption / small text ── */
+.stCaption, [data-testid="stCaptionContainer"] {
+    color: #64748b !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+/* ── Info box ── */
+div[data-testid="stInfo"] {
+    background: rgba(80, 112, 176, 0.08) !important;
+    border: 1px solid rgba(80, 112, 176, 0.2) !important;
+    border-radius: 12px !important;
+    color: #90c0e0 !important;
+}
+
+/* ── Checkbox ── */
+[data-testid="stCheckbox"] label { color: #94a3b8 !important; font-size: 13px !important; }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0D1B2A; }
-::-webkit-scrollbar-thumb { background: #2D4A6E; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #F59E0B; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #050a15; }
+::-webkit-scrollbar-thumb {
+    background: rgba(80, 112, 176, 0.25);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: #5070b0; }
+
+/* ── Text selection ── */
+::selection {
+    background: rgba(80, 112, 176, 0.4);
+    color: #ffffff;
+}
+
+/* ── Utility classes ── */
+.accent-text { color: #90c0e0 !important; font-weight: 700 !important; }
+.glow-text { text-shadow: 0 0 30px rgba(80, 112, 176, 0.6); }
+.manrope { font-family: 'Manrope', sans-serif !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -223,10 +473,10 @@ def _enrich_lead(lead_dict: dict) -> dict:
 def _nav_btn(label: str, destino: str, ativo: bool):
     if ativo:
         st.markdown(
-            f"<style>[data-testid='stSidebar'] [data-testid='baseButton-secondary'][kind='secondary']"
-            f":has(+ [style*='display: none']) + div button[title='{label}']"
-            f"{{background:#162032!important;color:#F59E0B!important;"
-            f"border-left:3px solid #F59E0B!important;font-weight:700!important}}</style>",
+            f"<style>[data-testid='stSidebar'] .stButton button:has(div[title='{label}']) {{ "
+            f"background: rgba(80, 112, 176, 0.2) !important; color: #ffffff !important; "
+            f"border-color: rgba(144, 192, 224, 0.3) !important; font-weight: 700 !important; "
+            f"box-shadow: 0 4px 15px rgba(32, 64, 128, 0.2) !important; border-left: 4px solid #90c0e0 !important; }} </style>",
             unsafe_allow_html=True,
         )
     if st.button(label, use_container_width=True, key=f"nav__{destino}"):
@@ -241,12 +491,12 @@ def render_sidebar(leads: list[dict], pagina: str):
     with st.sidebar:
         # Logo
         st.markdown(
-            "<div style='padding:12px 4px 20px;border-bottom:1px solid #1E3050;margin-bottom:16px'>"
-            "<div style='font-size:1.5rem;margin-bottom:4px'>⚖️</div>"
-            "<div style='font-size:0.95rem;font-weight:800;color:#F1F5F9;letter-spacing:-0.3px'>"
-            "OAB Lead Qualifier</div>"
-            "<div style='font-size:11px;color:#64748B;margin-top:2px'>"
-            f"{total} leads no banco</div>"
+            "<div style='padding:16px 8px 24px;border-bottom:1px solid rgba(80, 112, 176, 0.2);margin-bottom:24px'>"
+            "<div style='font-size:1.8rem;margin-bottom:8px'>⚖️</div>"
+            "<div style='font-size:1.1rem;font-weight:800;color:#ffffff;letter-spacing:-0.5px;font-family:\"Manrope\"'>"
+            "AVESTRA <span style='color:#90c0e0'>CRM</span></div>"
+            "<div style='font-size:12px;color:#b0c0d0;margin-top:4px'>"
+            f"OAB Lead Qualifier · {total} leads</div>"
             "</div>",
             unsafe_allow_html=True,
         )
@@ -265,12 +515,14 @@ def render_sidebar(leads: list[dict], pagina: str):
 
         st.divider()
         _nav_btn("⬆️ Adicionar leads", "upload", pagina == "upload")
+        _nav_btn("🔄 Sincronizar dados", "sync", pagina == "sync")
 
         # Indicador de salvamento automático
         st.markdown(
-            "<div style='margin-top:20px;padding:8px 12px;background:#0A1628;border-radius:8px;"
-            "border:1px solid #1E3050;text-align:center'>"
-            "<span style='font-size:11px;color:#64748B'>💾 Dados salvos automaticamente</span>"
+            "<div style='margin-top:24px;padding:12px;background:rgba(144, 192, 224, 0.05);border-radius:12px;"
+            "border:1px solid rgba(144, 192, 224, 0.15);text-align:center'>"
+            "<span style='font-size:11px;color:#90c0e0;font-weight:600;letter-spacing:0.5px'>"
+            "💾 SINCRONIZAÇÃO AUTOMÁTICA</span>"
             "</div>",
             unsafe_allow_html=True,
         )
@@ -281,11 +533,10 @@ def tela_upload(leads: list[dict]):
     total = len(leads)
 
     st.markdown(
-        "<h2 style='color:#F1F5F9;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px'>"
-        "⬆️ Adicionar leads</h2>"
-        "<p style='color:#64748B;margin-bottom:24px'>"
-        "Cada upload <strong style='color:#F59E0B'>acumula</strong> os novos leads no banco. "
-        "Leads existentes são atualizados sem perder atribuições de closers.</p>",
+        "<h2 class='manrope' style='color:#ffffff;font-weight:800;letter-spacing:-1px;margin-bottom:8px'>"
+        "⬆️ Adicionar <span class='accent-text'>Novas Oportunidades</span></h2>"
+        "<p style='color:#b0c0d0;margin-bottom:32px;font-size:1.1rem'>"
+        "Sistema de acumulação inteligente. Novos leads são integrados sem sobrescrever closer atual.</p>",
         unsafe_allow_html=True,
     )
 
@@ -426,6 +677,8 @@ def main():
         slug  = pagina.replace("closer_", "")
         nome  = CLOSERS.get(slug, slug.capitalize())
         render_closer_panel(leads, slug, nome)
+    elif pagina == "sync":
+        render_sync_panel(leads)
 
 
 if __name__ == "__main__":

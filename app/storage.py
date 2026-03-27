@@ -55,8 +55,49 @@ def _conn() -> sqlite3.Connection:
             updated_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS avatars (
+            username   TEXT PRIMARY KEY,
+            data_uri   TEXT,
+            fetched_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
     c.commit()
     return c
+
+
+def get_avatar(username: str) -> str | None:
+    """Retorna data URI do avatar persistido no banco, ou None."""
+    if _IS_PYODIDE or not username:
+        return None
+    try:
+        c = _conn()
+        row = c.execute(
+            "SELECT data_uri FROM avatars WHERE username = ?", (username,)
+        ).fetchone()
+        c.close()
+        return row[0] if row else None
+    except Exception:
+        return None
+
+
+def save_avatar(username: str, data_uri: str | None) -> None:
+    """Persiste (ou atualiza) o data URI do avatar no banco."""
+    if _IS_PYODIDE or not username:
+        return
+    try:
+        c = _conn()
+        c.execute("""
+            INSERT INTO avatars (username, data_uri, fetched_at)
+            VALUES (?, ?, datetime('now'))
+            ON CONFLICT(username) DO UPDATE SET
+                data_uri   = excluded.data_uri,
+                fetched_at = datetime('now')
+        """, (username, data_uri))
+        c.commit()
+        c.close()
+    except Exception:
+        pass
 
 
 # ── API pública ───────────────────────────────────────────────────────────────
@@ -75,7 +116,8 @@ def add_leads(novos: list[dict]) -> int:
             username = lead.get("username", "")
             if not username:
                 continue
-            closer = existentes.get(username, {}).get("closer", lead.get("closer", ""))
+            local_closer = existentes.get(username, {}).get("closer", "")
+            closer = local_closer if local_closer else lead.get("closer", "")
             existentes[username] = {**lead, "closer": closer}
             count += 1
         _ls_save(sorted(existentes.values(), key=lambda x: x.get("score", 0), reverse=True))
@@ -92,7 +134,9 @@ def add_leads(novos: list[dict]) -> int:
         username = lead.get("username", "")
         if not username:
             continue
-        closer = closer_existente.get(username, lead.get("closer", ""))
+        # Preserva closer local se já tiver um; caso contrário usa o do lead importado
+        local_closer = closer_existente.get(username, "")
+        closer = local_closer if local_closer else lead.get("closer", "")
         lead_final = {**lead, "closer": closer}
         score = int(lead.get("score", 0))
         c.execute("""
