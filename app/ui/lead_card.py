@@ -140,7 +140,7 @@ def render_lead_card(lead: dict, show_assign: bool = False):
             with a1:
                 closer_choice = st.selectbox(
                     "Closer",
-                    options=["", "Matheus", "Jonas", "Giovanne"],
+                    options=["", "Matheus", "Jonas", "Giovanne", "Say"],
                     key=f"closer_sel_{username}",
                     label_visibility="collapsed",
                     format_func=lambda x: "Selecione o closer..." if x == "" else x,

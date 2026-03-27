@@ -24,6 +24,7 @@ CLOSERS = {
     "matheus":  "Matheus",
     "jonas":    "Jonas",
     "giovanne": "Giovanne",
+    "say":      "Say",
 }
 
 # ── Página ────────────────────────────────────────────────────────────────────
