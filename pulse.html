@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposta | Projeto Escala 100k — Gabriel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@200;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Avestra Blue Palette */
+            --avestra-blue-900: #204080;
+            --avestra-blue-800: #306090;
+            --avestra-blue-700: #3060a0;
+            --avestra-blue-600: #5070b0;
+            --avestra-blue-500: #6090c0;
+            --avestra-blue-400: #7090c0;
+            --avestra-blue-300: #90c0e0;
+            --avestra-blue-200: #b0c0d0;
+            
+            --avestra-cream: #e0e0d0;
+            --avestra-off-white: #f0f0f0;
+
+            --accent-blue: var(--avestra-blue-600);
+            --accent-blue-glow: rgba(80, 112, 176, 0.5);
+            --bg-deep: var(--avestra-blue-900);
+        }
+
+        * { scroll-behavior: smooth; }
+
+        /* Custom Animations */
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes border-spin {
+            from { --gradient-angle: 0deg; }
+            to { --gradient-angle: 360deg; }
+        }
+
+        @keyframes shimmer {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes animStar {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-2000px); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(80, 112, 176, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(80, 112, 176, 0.4); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes count-up {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slide-in-left {
+            from { opacity: 0; transform: translateX(-40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slide-in-right {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @property --gradient-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        .animate-fade-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+
+        /* Shiny CTA Button */
+        .shiny-cta {
+            --gradient-angle: 0deg;
+            position: relative;
+            overflow: hidden;
+            border-radius: 9999px;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(#000000, #000000) padding-box,
+            conic-gradient(from var(--gradient-angle), transparent 0%, #5070b0 5%, #5070b0 15%, #5070b0 30%, transparent 40%, transparent 100%) border-box;
+            border: 2px solid transparent;
+            cursor: pointer;
+            isolation: isolate;
+            animation: border-spin 2.5s linear infinite;
+        }
+
+        .shiny-cta::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, white 0.5px, transparent 0);
+            background-size: 4px 4px;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        /* Parallax Stars */
+        .stars-1 { box-shadow: 234px 124px #fff, 654px 345px #fff, 876px 12px #fff, 1200px 800px #fff, 400px 1500px #fff, 1800px 200px #fff, 100px 1000px #fff, 900px 1900px #fff, 500px 600px #fff, 1400px 100px #fff, 300px 400px #fff, 1600px 1200px #fff, 50px 300px #fff, 750px 1100px #fff, 1100px 1600px #fff, 1700px 700px #fff, 200px 1800px #fff, 950px 50px #fff; }
+        .stars-2 { box-shadow: 123px 456px #fff, 789px 234px #fff, 456px 890px #fff, 1100px 300px #fff, 200px 1200px #fff, 1500px 500px #fff, 600px 1700px #fff, 1300px 900px #fff, 350px 750px #fff, 850px 1400px #fff, 1650px 1050px #fff; }
+        .stars-3 { box-shadow: 50px 50px rgba(80,112,176,0.3), 800px 400px rgba(80,112,176,0.2), 1400px 1000px rgba(80,112,176,0.25), 300px 1300px rgba(80,112,176,0.15), 1000px 200px rgba(80,112,176,0.2); }
+
+        .gradient-blur {
+            position: fixed;
+            z-index: 40;
+            inset: 0 0 auto 0;
+            height: 120px;
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            backdrop-filter: blur(8px);
+            mask-image: linear-gradient(to bottom, black, transparent);
+        }
+
+        .selection-blue::selection {
+            background: #5070b0;
+            color: white;
+        }
+
+        .text-stroke {
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
+            color: transparent;
+        }
+
+        /* Pillar Card Hover */
+        .pilar-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pilar-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(80, 112, 176, 0.3);
+        }
+
+        /* Timeline connector */
+        .timeline-line {
+            position: relative;
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 60px;
+            bottom: -20px;
+            width: 2px;
+            background: linear-gradient(to bottom, #5070b0, transparent);
+        }
+        .timeline-line:last-child::before {
+            display: none;
+        }
+
+        /* Price slash animation */
+        .price-slash {
+            position: relative;
+        }
+        .price-slash::after {
+            content: '';
+            position: absolute;
+            left: -5%;
+            top: 50%;
+            width: 110%;
+            height: 3px;
+            background: #5070b0;
+            transform: rotate(-8deg);
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Glowing number */
+        .glow-number {
+            text-shadow: 0 0 30px rgba(80, 112, 176, 0.5), 0 0 60px rgba(80, 112, 176, 0.2);
+        }
+
+        /* Metric card */
+        .metric-card {
+            background: linear-gradient(135deg, rgba(80, 112, 176, 0.05), transparent);
+        }
+
+        /* Section divider */
+        .section-divider {
+            background: linear-gradient(90deg, transparent, rgba(80, 112, 176, 0.3), transparent);
+            height: 1px;
+        }
+    </style>
+</head>
+<body class="selection-blue">
+    <div class="min-h-screen bg-black text-white font-inter relative overflow-x-hidden">
+
+        <!-- Global Background -->
+        <div class="fixed inset-0 z-0 pointer-events-none">
+            <div class="absolute inset-0 bg-gradient-to-b from-[#0a1128] to-black"></div>
+            <div class="absolute top-0 left-0 w-[1px] h-[1px] bg-transparent stars-1 animate-[animStar_50s_linear_infinite]"></div>
+            <div class="absolute top-0 left-0 w-[2px] h-[2px] bg-transparent stars-2 animate-[animStar_80s_linear_infinite]"></div>
+            <div class="absolute top-0 left-0 w-[3px] h-[3px] bg-transparent stars-3 animate-[animStar_120s_linear_infinite]"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#204080]/15 rounded-full blur-[120px]"></div>
+            <div class="absolute top-[20%] left-[10%] w-[400px] h-[400px] bg-[#306090]/10 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-[#5070b0]/5 rounded-full blur-[150px]"></div>
+            <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(circle_at_center,black_40%,transparent_80%)]"></div>
+        </div>
+
+        <!-- Top Blur Header -->
+        <div class="gradient-blur"></div>
+
+        <!-- Navbar -->
+        <header class="fixed top-0 left-0 w-full z-50 pt-4 md:pt-6 px-4">
+            <nav class="max-w-5xl mx-auto flex items-center justify-between bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-4 md:px-6 py-3 shadow-2xl">
+                <div class="flex items-center gap-2">
+                    <a href="index.html" class="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
+                        <iconify-icon icon="lucide:arrow-left" class="w-4 h-4"></iconify-icon>
+                        <span class="text-sm font-medium hidden sm:inline">Voltar</span>
+                    </a>
+                </div>
+
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#diagnostico" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Diagnóstico</a>
+                    <a href="#pilares" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Pilares</a>
+                    <a href="#cronograma" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cronograma</a>
+                    <a href="#investimento" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Investimento</a>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="#proximos-passos" class="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-white/5 px-5 md:px-6 py-2 transition-transform active:scale-95">
+                        <span class="absolute inset-0 border border-white/10 rounded-full"></span>
+                        <span class="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_75%,#5070b0_100%)] opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                        <span class="absolute inset-[1px] rounded-full bg-black"></span>
+                        <span class="relative z-10 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                            Aprovar <iconify-icon icon="lucide:arrow-right" class="w-3 h-3 group-hover:translate-x-0.5 transition-transform"></iconify-icon>
+                        </span>
+                    </a>
+                </div>
+            </nav>
+        </header>
+
+        <main class="relative z-10">
+
+            <!-- ============================================ -->
+            <!-- HERO SECTION -->
+            <!-- ============================================ -->
+            <section class="min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-6">
+                <div class="text-center max-w-5xl mx-auto">
+
+                    <!-- Animated Badge -->
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 animate-fade-up" style="animation-delay: 0.1s;">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5070b0]"></span>
+                        </span>
+                        <span class="text-xs font-medium text-blue-100/90 tracking-wide font-manrope">
+                            Proposta Exclusiva — Fevereiro 2026
+                        </span>
+                        <iconify-icon icon="lucide:lock" class="w-3 h-3 text-blue-400"></iconify-icon>
+                    </div>
+
+                    <!-- Hero Headline -->
+                    <h1 class="text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tighter font-manrope leading-[1.05] mb-8 animate-fade-up" style="animation-delay: 0.2s;">
+                        <span class="block text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40">Projeto</span>
+                        <span class="block text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40">
+                            Escala <span class="text-[#5070b0] inline-block relative">
+                                100k
+                                <svg class="absolute w-full h-3 -bottom-2 left-0 text-[#5070b0] opacity-60" viewBox="0 0 100 10" preserveAspectRatio="none">
+                                    <path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="2" fill="none" />
+                                </svg>
+                            </span>
+                        </span>
+                    </h1>
+
+                    <p class="text-lg md:text-2xl text-zinc-400 max-w-2xl mx-auto mb-6 leading-relaxed animate-fade-up" style="animation-delay: 0.3s;">
+                        Sistema de Aquisição e Retenção de Pacientes.<br class="hidden md:inline">
+                        Uma máquina de vendas proprietária, implementada em <span class="text-white font-medium">45 dias</span>.
+                    </p>
+
+                    <p class="text-sm text-zinc-500 mb-12 animate-fade-up" style="animation-delay: 0.35s;">
+                        Para: <span class="text-zinc-300">Gabriel & Sócios</span> &nbsp;|&nbsp;
+                        De: <span class="text-zinc-300">Lucas Silvano</span> &nbsp;|&nbsp;
+                        <span class="text-zinc-300">11 de Fevereiro de 2026</span>
+                    </p>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6 animate-fade-up" style="animation-delay: 0.4s;">
+                        <a href="#investimento" class="shiny-cta group">
+                            <span class="relative z-10 flex items-center gap-2 text-white font-medium">
+                                Ver Investimento <iconify-icon icon="lucide:arrow-right" class="transition-transform group-hover:translate-x-1"></iconify-icon>
+                            </span>
+                        </a>
+
+                        <a href="#diagnostico" class="group px-8 py-4 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 font-medium hover:text-white hover:bg-zinc-800 transition-all flex items-center gap-2">
+                            <iconify-icon icon="lucide:play" class="w-5 h-5"></iconify-icon>
+                            Explorar Proposta
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Metrics Strip -->
+                <div class="w-full mt-24 md:mt-32 border-y border-white/5 bg-white/[0.02] backdrop-blur-sm py-10 opacity-80 hover:opacity-100 transition-opacity">
+                    <div class="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                        <div>
+                            <div class="text-3xl md:text-4xl font-bold font-manrope text-[#5070b0] glow-number">528</div>
+                            <div class="text-xs text-zinc-500 uppercase tracking-widest mt-2">Sessões/Mês Meta</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl md:text-4xl font-bold font-manrope text-white">R$ 60k<span class="text-[#5070b0]">+</span></div>
+                            <div class="text-xs text-zinc-500 uppercase tracking-widest mt-2">Faturamento Projetado</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl md:text-4xl font-bold font-manrope text-white">45</div>
+                            <div class="text-xs text-zinc-500 uppercase tracking-widest mt-2">Dias de Implementação</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl md:text-4xl font-bold font-manrope text-white">5</div>
+                            <div class="text-xs text-zinc-500 uppercase tracking-widest mt-2">Pilares Estratégicos</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: DIAGNÓSTICO -->
+            <!-- ============================================ -->
+            <section id="diagnostico" class="py-24 md:py-32 px-6">
+                <div class="max-w-6xl mx-auto">
+
+                    <!-- Section Header -->
+                    <div class="mb-16 md:mb-20 text-center max-w-3xl mx-auto reveal">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest text-[#5070b0] mb-6">
+                            <iconify-icon icon="lucide:search" class="w-3 h-3"></iconify-icon>
+                            Seção 01
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-semibold text-white tracking-tight font-manrope mb-6">
+                            Diagnóstico e <br />
+                            <span class="text-[#5070b0]">Objetivo</span>
+                        </h2>
+                        <p class="text-lg text-zinc-400 font-light leading-relaxed">
+                            A clínica possui um produto validado e demanda crescente, porém enfrenta um gargalo crítico na conversão final e na qualificação dos leads.
+                        </p>
+                    </div>
+
+<!-- SECTION:DIAGNOSTICO -->
+                    <!-- Problem Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 reveal">
+                        <!-- Problem 1 -->
+                        <div class="group relative overflow-hidden p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black hover:border-blue-500/30 transition-all rounded-xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-[60px] group-hover:bg-blue-500/10 transition-colors"></div>
+                            <div class="relative z-10">
+                                <div class="mb-5 inline-flex p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[#5070b0]">
+                                    <iconify-icon icon="lucide:flame" class="w-6 h-6"></iconify-icon>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-3">Desperdício de Verba</h3>
+                                <p class="text-zinc-400 text-sm leading-relaxed">O algoritmo do Facebook não recebe dados de qualidade. Nota baixa no Pixel/CAPI significa queima de dinheiro sem retorno.</p>
+                            </div>
+                        </div>
+
+                        <!-- Problem 2 -->
+                        <div class="group relative overflow-hidden p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black hover:border-blue-500/30 transition-all rounded-xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-[60px] group-hover:bg-blue-500/10 transition-colors"></div>
+                            <div class="relative z-10">
+                                <div class="mb-5 inline-flex p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[#5070b0]">
+                                    <iconify-icon icon="lucide:trending-down" class="w-6 h-6"></iconify-icon>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-3">Baixa Conversão</h3>
+                                <p class="text-zinc-400 text-sm leading-relaxed">O lead chega frio e sem consciência da necessidade do tratamento. Página genérica não educa nem converte.</p>
+                            </div>
+                        </div>
+
+                        <!-- Problem 3 -->
+                        <div class="group relative overflow-hidden p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black hover:border-blue-500/30 transition-all rounded-xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-[60px] group-hover:bg-blue-500/10 transition-colors"></div>
+                            <div class="relative z-10">
+                                <div class="mb-5 inline-flex p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[#5070b0]">
+                                    <iconify-icon icon="lucide:alert-triangle" class="w-6 h-6"></iconify-icon>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-3">Risco Operacional</h3>
+                                <p class="text-zinc-400 text-sm leading-relaxed">Dependência de volume massivo de cliques para gerar poucas vendas. Operação em risco de estagnação.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Objective -->
+                    <div class="relative overflow-hidden p-8 md:p-12 border border-[#5070b0]/30 bg-gradient-to-br from-blue-950/20 to-black rounded-2xl reveal">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[100px]"></div>
+                        <div class="relative z-10 flex flex-col md:flex-row items-start gap-6">
+                            <div class="shrink-0 p-4 rounded-xl bg-[#5070b0]/10 border border-[#5070b0]/20">
+                                <iconify-icon icon="lucide:target" class="w-8 h-8 text-[#5070b0]"></iconify-icon>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white font-manrope mb-4">O Objetivo</h3>
+                                <p class="text-zinc-300 text-lg leading-relaxed">
+                                    Implementar, em <span class="text-[#5070b0] font-semibold">45 dias</span>, um Ecossistema de Vendas Proprietário que não apenas "gere leads", mas <span class="text-white font-medium">qualifique, eduque e converta</span> pacientes de forma automatizada, visando a meta de <span class="text-[#5070b0] font-semibold">528 sessões/mês</span> e um faturamento projetado (com LTV) superior a <span class="text-[#5070b0] font-semibold">R$ 60.000,00 mensais</span>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+<!-- /SECTION:DIAGNOSTICO -->
+
+                </div>
+            </section>
+
+            <!-- Section Divider -->
+            <div class="section-divider max-w-4xl mx-auto"></div>
+
+            <!-- SECTION:SOBRE_INTRO --><!-- /SECTION:SOBRE_INTRO -->
+
+            <!-- SECTION:SOBRE_STATS --><!-- /SECTION:SOBRE_STATS -->
+
+            <!-- SECTION:ANALYTICS --><!-- /SECTION:ANALYTICS -->
+
+            <!-- SECTION:SOBRE_CLIENTS --><!-- /SECTION:SOBRE_CLIENTS -->
+
+            <!-- SECTION:CAROUSEL --><!-- /SECTION:CAROUSEL -->
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: OS 5 PILARES -->
+            <!-- ============================================ -->
+            <section id="pilares" class="py-24 md:py-32 px-6">
+                <div class="max-w-6xl mx-auto">
+
+                    <!-- Section Header -->
+                    <div class="mb-16 md:mb-20 text-center max-w-3xl mx-auto reveal">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest text-[#5070b0] mb-6">
+                            <iconify-icon icon="lucide:layers" class="w-3 h-3"></iconify-icon>
+                            Seção 02
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-semibold text-white tracking-tight font-manrope mb-6">
+                            A Máquina de Vendas em <br />
+                            <span class="text-[#5070b0]">5 Pilares</span>
+                        </h2>
+                        <p class="text-lg text-zinc-400 font-light leading-relaxed">
+                            Não faremos apenas "gestão de tráfego". Implementaremos uma infraestrutura completa de tecnologia e vendas.
+                        </p>
+                    </div>
+
+<!-- SECTION:PILARES -->
+                    <!-- Pillar Grid (Bento Style) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
+
+                        <!-- PILAR 1 - Large Card -->
+                        <div class="lg:col-span-2 lg:row-span-2 pilar-card group relative overflow-hidden p-8 md:p-10 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black rounded-xl reveal">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style="background: radial-gradient(circle at top right, #5070b0, transparent 70%);"></div>
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="inline-flex p-3 rounded-lg bg-white/5 border border-white/10 text-[#5070b0]">
+                                        <iconify-icon icon="lucide:database" class="w-6 h-6"></iconify-icon>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#5070b0] uppercase tracking-widest font-manrope">Pilar 01</span>
+                                </div>
+                                <h3 class="text-2xl md:text-3xl font-semibold text-white font-manrope mb-4 tracking-tight">Inteligência de Dados</h3>
+                                <p class="text-zinc-500 text-xs uppercase tracking-widest mb-4">CAPI & Tracking</p>
+                                <p class="text-zinc-400 leading-relaxed mb-6">Para resolver o problema da "nota baixa" no Facebook e parar de queimar dinheiro.</p>
+                                <ul class="space-y-3 mt-auto">
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-[#5070b0] mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Configuração avançada de API de Conversões (CAPI) Server-side</span>
+                                    </li>
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-[#5070b0] mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Tagueamento de eventos de fundo de funil (Purchase, Initiate Checkout, Lead Qualificado)</span>
+                                    </li>
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-[#5070b0] mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Treinamento do Pixel para buscar compradores, não apenas "curiosos"</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- PILAR 2 -->
+                        <div class="lg:col-span-2 pilar-card group relative overflow-hidden p-8 border border-white/10 bg-black hover:border-white/20 transition-all rounded-xl reveal">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style="background: radial-gradient(circle at top right, #3b82f6, transparent 70%);"></div>
+                            <div class="relative z-10 flex flex-col h-full">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="inline-flex p-3 rounded-lg bg-white/5 border border-white/10 text-blue-400">
+                                        <iconify-icon icon="lucide:layout" class="w-6 h-6"></iconify-icon>
+                                    </div>
+                                    <span class="text-xs font-bold text-blue-400 uppercase tracking-widest font-manrope">Pilar 02</span>
+                                </div>
+                                <h3 class="text-2xl font-semibold text-white font-manrope mb-2 tracking-tight">Arquitetura de Oferta e Funil</h3>
+                                <p class="text-zinc-400 text-sm mb-4">Para aumentar a taxa de conversão da página de vendas.</p>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-blue-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Redefinição do Avatar e Oferta Irresistível (Copywriting)</span>
+                                    </li>
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-blue-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Landing Pages de Alta Conversão (Design e Estrutura Persuasiva)</span>
+                                    </li>
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-blue-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Funil de Quiz: Segmenta o paciente antes da oferta</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- PILAR 3 - Featured / Diferencial -->
+                        <div class="lg:col-span-2 pilar-card group relative overflow-hidden p-8 border border-[#5070b0]/30 bg-zinc-900/40 shadow-[0_0_30px_rgba(80,112,176,0.08)] rounded-xl reveal">
+                            <div class="absolute -top-3 left-6 bg-[#5070b0] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">O Diferencial</div>
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style="background: radial-gradient(circle at top right, #5070b0, transparent 70%);"></div>
+                            <div class="relative z-10 flex flex-col h-full">
+                                <div class="flex items-center gap-3 mb-4 mt-2">
+                                    <div class="inline-flex p-3 rounded-lg bg-[#5070b0]/10 border border-[#5070b0]/20 text-[#5070b0]">
+                                        <iconify-icon icon="lucide:bot" class="w-6 h-6"></iconify-icon>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#5070b0] uppercase tracking-widest font-manrope">Pilar 03</span>
+                                </div>
+                                <h3 class="text-2xl font-semibold text-white font-manrope mb-2 tracking-tight">Agente de Vendas com IA</h3>
+                                <p class="text-zinc-400 text-sm mb-4">Substituição do atendimento humano lento por uma IA treinada em SPIN Selling.</p>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-[#5070b0] mt-0.5 shrink-0"></iconify-icon>
+                                        <span><strong class="text-white">WhatsApp 24/7:</strong> A IA aborda o lead instantaneamente</span>
+                                    </li>
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-[#5070b0] mt-0.5 shrink-0"></iconify-icon>
+                                        <span><strong class="text-white">Script SPIN:</strong> Perguntas de Situação, Problema, Implicação e Necessidade</span>
+                                    </li>
+                                    <li class="flex items-start gap-3 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-[#5070b0] mt-0.5 shrink-0"></iconify-icon>
+                                        <span><strong class="text-white">Agendamento Automático:</strong> Conduz até o pagamento (R$ 69,90) sem intervenção humana</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- PILAR 4 -->
+                        <div class="pilar-card group relative overflow-hidden p-8 border border-white/10 bg-black hover:border-white/20 transition-all rounded-xl reveal">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style="background: radial-gradient(circle at top right, #a855f7, transparent 70%);"></div>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="inline-flex p-3 rounded-lg bg-white/5 border border-white/10 text-purple-400">
+                                        <iconify-icon icon="lucide:users" class="w-6 h-6"></iconify-icon>
+                                    </div>
+                                    <span class="text-xs font-bold text-purple-400 uppercase tracking-widest font-manrope">Pilar 04</span>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-2">CRM e Pipeline</h3>
+                                <p class="text-sm text-zinc-400 mb-3">Organização total dos leads para evitar perda de oportunidades.</p>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start gap-2 text-xs text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-purple-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Implementação de CRM completo</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 text-xs text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-purple-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Automação de Follow-up</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 text-xs text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-purple-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Reativação de Base para LTV</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- PILAR 5 -->
+                        <div class="pilar-card group relative overflow-hidden p-8 border border-white/10 bg-black hover:border-white/20 transition-all rounded-xl reveal">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style="background: radial-gradient(circle at top right, #f59e0b, transparent 70%);"></div>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="inline-flex p-3 rounded-lg bg-white/5 border border-white/10 text-yellow-400">
+                                        <iconify-icon icon="lucide:megaphone" class="w-6 h-6"></iconify-icon>
+                                    </div>
+                                    <span class="text-xs font-bold text-yellow-400 uppercase tracking-widest font-manrope">Pilar 05</span>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-2">Tráfego Pago Estratégico</h3>
+                                <p class="text-sm text-zinc-400 mb-3">Gestão das campanhas no Meta Ads (Facebook/Instagram).</p>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start gap-2 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-yellow-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Criativos focados em dor e desejo</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-yellow-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Otimização diária baseada em ROAS</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 text-sm text-zinc-300">
+                                        <iconify-icon icon="lucide:check" class="text-yellow-400 mt-0.5 shrink-0"></iconify-icon>
+                                        <span>Escala progressiva de investimento</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+<!-- /SECTION:PILARES -->
+                </div>
+            </section>
+
+            <!-- Section Divider -->
+            <div class="section-divider max-w-4xl mx-auto"></div>
+
+            <!-- SECTION:ENTREGAS --><!-- /SECTION:ENTREGAS -->
+
+            <!-- SECTION:EDITORIAL --><!-- /SECTION:EDITORIAL -->
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: CRONOGRAMA -->
+            <!-- ============================================ -->
+            <section id="cronograma" class="py-24 md:py-32 px-6">
+                <div class="max-w-5xl mx-auto">
+
+                    <!-- Section Header -->
+                    <div class="mb-16 md:mb-20 text-center max-w-3xl mx-auto reveal">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest text-[#5070b0] mb-6">
+                            <iconify-icon icon="lucide:clock" class="w-3 h-3"></iconify-icon>
+                            Seção 03
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-semibold text-white tracking-tight font-manrope mb-6">
+                            Cronograma de <br />
+                            <span class="text-[#5070b0]">Implementação</span>
+                        </h2>
+                        <p class="text-lg text-zinc-400 font-light">
+                            4 fases em 45 dias. Da fundação à escala.
+                        </p>
+                    </div>
+
+<!-- SECTION:CRONOGRAMA -->
+                    <!-- Timeline -->
+                    <div class="space-y-6 md:space-y-0 md:grid md:grid-cols-4 md:gap-6">
+
+                        <!-- Phase 1 -->
+                        <div class="reveal group relative">
+                            <div class="relative overflow-hidden p-6 md:p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black rounded-xl hover:border-[#5070b0]/30 transition-all h-full">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#5070b0] to-transparent"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-3 mb-5">
+                                        <div class="w-10 h-10 rounded-full bg-[#5070b0]/10 border border-[#5070b0]/30 flex items-center justify-center text-[#5070b0] font-bold font-manrope text-sm">01</div>
+                                        <div>
+                                            <div class="text-xs text-zinc-500 uppercase tracking-widest">Dias 1-10</div>
+                                            <div class="text-white font-semibold font-manrope">Fundação</div>
+                                        </div>
+                                    </div>
+                                    <ul class="space-y-3 text-[#5070b0]">
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-[#5070b0] mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Setup de CAPI e Pixel</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-[#5070b0] mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Definição de Avatar e Oferta</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-[#5070b0] mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Estrutura do CRM</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2 -->
+                        <div class="reveal group relative" style="transition-delay: 0.1s;">
+                            <div class="relative overflow-hidden p-6 md:p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black rounded-xl hover:border-blue-500/30 transition-all h-full">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-transparent"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-3 mb-5">
+                                        <div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold font-manrope text-sm">02</div>
+                                        <div>
+                                            <div class="text-xs text-zinc-500 uppercase tracking-widest">Dias 11-25</div>
+                                            <div class="text-white font-semibold font-manrope">Construção</div>
+                                        </div>
+                                    </div>
+                                    <ul class="space-y-3">
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-blue-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Landing Pages e Quiz</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-blue-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Programação do Agente de IA</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-blue-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Criação dos anúncios</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 3 -->
+                        <div class="reveal group relative" style="transition-delay: 0.2s;">
+                            <div class="relative overflow-hidden p-6 md:p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black rounded-xl hover:border-purple-500/30 transition-all h-full">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-transparent"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-3 mb-5">
+                                        <div class="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold font-manrope text-sm">03</div>
+                                        <div>
+                                            <div class="text-xs text-zinc-500 uppercase tracking-widest">Dias 26-35</div>
+                                            <div class="text-white font-semibold font-manrope">Lançamento</div>
+                                        </div>
+                                    </div>
+                                    <ul class="space-y-3">
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-purple-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Go-live das campanhas</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-purple-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Monitoramento da IA</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-purple-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Ajustes de copy e criativos</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 4 -->
+                        <div class="reveal group relative" style="transition-delay: 0.3s;">
+                            <div class="relative overflow-hidden p-6 md:p-8 border border-white/10 bg-gradient-to-b from-zinc-900/50 to-black rounded-xl hover:border-yellow-500/30 transition-all h-full">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-transparent"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-3 mb-5">
+                                        <div class="w-10 h-10 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-yellow-400 font-bold font-manrope text-sm">04</div>
+                                        <div>
+                                            <div class="text-xs text-zinc-500 uppercase tracking-widest">Dias 36-45</div>
+                                            <div class="text-white font-semibold font-manrope">Escala</div>
+                                        </div>
+                                    </div>
+                                    <ul class="space-y-3">
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-yellow-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Análise de métricas</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-yellow-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Ajuste de bids no tráfego</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-sm text-zinc-400">
+                                            <iconify-icon icon="lucide:check-circle-2" class="text-yellow-400 mt-0.5 shrink-0 w-4 h-4"></iconify-icon>
+                                            <span>Entrega do sistema rodando</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mt-12 reveal">
+                        <div class="flex items-center justify-between text-xs text-zinc-500 uppercase tracking-widest mb-3">
+                            <span>Dia 1</span>
+                            <span>Dia 45 - Sistema Ativo</span>
+                        </div>
+                        <div class="h-2 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+                            <div class="h-full bg-gradient-to-r from-[#204080] via-[#5070b0] via-[#7090c0] to-[#90c0e0] rounded-full" style="width: 100%;"></div>
+                        </div>
+                    </div>
+<!-- /SECTION:CRONOGRAMA -->
+
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- TESTIMONIAL / VALUE BANNER -->
+            <!-- ============================================ -->
+            <div class="w-full bg-[#5070b0] py-16 md:py-20 px-6 reveal">
+                <div class="max-w-4xl mx-auto text-center">
+                    <div class="flex justify-center gap-1 text-black mb-6">
+                        <iconify-icon icon="lucide:zap" class="w-6 h-6"></iconify-icon>
+                        <iconify-icon icon="lucide:zap" class="w-6 h-6"></iconify-icon>
+                        <iconify-icon icon="lucide:zap" class="w-6 h-6"></iconify-icon>
+                        <iconify-icon icon="lucide:zap" class="w-6 h-6"></iconify-icon>
+                        <iconify-icon icon="lucide:zap" class="w-6 h-6"></iconify-icon>
+                    </div>
+                    <h3 class="text-3xl md:text-5xl font-bold text-black font-manrope leading-tight mb-6 tracking-tight">
+                        "O objetivo é tirar a clínica do risco operacional e colocá-la na rota dos R$ 100k/mês."
+                    </h3>
+                    <div class="flex items-center justify-center gap-4">
+                        <div class="w-12 h-12 bg-black rounded-full overflow-hidden flex items-center justify-center">
+                            <iconify-icon icon="lucide:rocket" class="text-[#5070b0] w-6 h-6"></iconify-icon>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-black font-bold text-lg">Projeto Escala 100k</div>
+                            <div class="text-black/70 font-medium">Sistema Completo de Aquisição</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: INVESTIMENTO -->
+            <!-- ============================================ -->
+            <section id="investimento" class="py-24 md:py-32 px-6 bg-black relative border-t border-white/5">
+                <div class="max-w-6xl mx-auto">
+
+                    <!-- Section Header -->
+                    <div class="text-center mb-16 md:mb-20 reveal">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest text-[#5070b0] mb-6">
+                            <iconify-icon icon="lucide:credit-card" class="w-3 h-3"></iconify-icon>
+                            Seção 04
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-semibold text-white font-manrope mb-4 tracking-tight">Investimento e <span class="text-[#5070b0]">Condições</span></h2>
+                        <p class="text-zinc-400 text-lg">Transparência total. Parceria de longo prazo.</p>
+                    </div>
+
+<!-- SECTION:INVESTIMENTO_TABLE -->
+                    <!-- Market Value Breakdown -->
+                    <div class="max-w-3xl mx-auto mb-12 reveal">
+                        <div class="text-center mb-8">
+                            <p class="text-sm text-zinc-500 uppercase tracking-widest mb-4">Valores de mercado (se contratados separadamente)</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                <span class="text-sm text-zinc-400">Funil e Copy</span>
+                                <span class="text-sm text-zinc-300 font-mono">R$ 8.000</span>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                <span class="text-sm text-zinc-400">Agente IA e Automações</span>
+                                <span class="text-sm text-zinc-300 font-mono">R$ 10.000</span>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                <span class="text-sm text-zinc-400">Data Intelligence (CAPI)</span>
+                                <span class="text-sm text-zinc-300 font-mono">R$ 5.000</span>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                <span class="text-sm text-zinc-400">Consultoria de CRM</span>
+                                <span class="text-sm text-zinc-300 font-mono">R$ 4.000</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center gap-3 p-4 bg-white/[0.03] border border-white/10 rounded-lg">
+                            <span class="text-sm text-zinc-400 uppercase tracking-widest">Valor Total de Mercado</span>
+                            <span class="text-lg text-zinc-300 font-bold font-mono">~R$ 27.000</span>
+                        </div>
+                    </div>
+<!-- /SECTION:INVESTIMENTO_TABLE -->
+
+<!-- SECTION:INVESTIMENTO_CARDS -->
+                    <!-- Pricing Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+                        <!-- Setup Card (Featured) -->
+                        <div class="relative p-8 md:p-10 border border-[#5070b0]/40 bg-zinc-900/40 shadow-[0_0_40px_rgba(80,112,176,0.1)] rounded-2xl flex flex-col reveal">
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#5070b0] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1 rounded-full whitespace-nowrap">
+                                Setup de Implementação
+                            </div>
+                            <div class="mt-4 mb-2">
+                                <span class="text-xs font-bold text-[#5070b0] uppercase tracking-widest">A. Sistema Completo</span>
+                            </div>
+                            <h3 class="text-xl font-bold font-manrope mb-2 text-white">Máquina de Vendas</h3>
+                            <p class="text-zinc-500 text-sm mb-8">Investimento único para entregar o sistema completo pronto em 45 dias.</p>
+
+                            <!-- SECTION:INVESTIMENTO_PRICE -->
+                            <div class="mb-8">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="text-zinc-500 text-sm">De:</span>
+                                    <span class="relative text-2xl text-zinc-600 font-bold price-slash">R$ 27.000</span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-zinc-500 text-sm">Por:</span>
+                                    <span class="text-5xl md:text-6xl font-bold text-white font-manrope">R$ 12.000</span>
+                                </div>
+                                <p class="text-sm text-zinc-400 mt-3">
+                                    <iconify-icon icon="lucide:credit-card" class="text-[#5070b0] w-4 h-4 inline-block mr-1"></iconify-icon>
+                                    Pagamento facilitado em até <span class="text-white font-semibold">3x</span> durante a implementação
+                                </p>
+                            </div>
+                            <!-- /SECTION:INVESTIMENTO_PRICE -->
+
+                            <ul class="space-y-3 mb-8 flex-1">
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> CAPI & Tracking Avançado</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Landing Pages & Funil de Quiz</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Agente de IA (WhatsApp 24/7)</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> CRM Completo + Automações</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Campanhas de Tráfego Pago</li>
+                            </ul>
+
+                            <div class="mt-auto">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold">
+                                    <iconify-icon icon="lucide:badge-percent" class="w-3 h-3"></iconify-icon>
+                                    Economia de R$ 15.000
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recurrence Card -->
+                        <div class="p-8 md:p-10 border border-zinc-800 bg-black hover:border-zinc-700 transition-all rounded-2xl flex flex-col reveal" style="transition-delay: 0.1s;">
+                            <div class="mb-2">
+                                <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">B. Após 30 Dias</span>
+                            </div>
+                            <h3 class="text-xl font-bold font-manrope mb-2 text-white">Fee Mensal</h3>
+                            <p class="text-zinc-500 text-sm mb-8">Gestão contínua do tráfego, otimização da IA e acompanhamento do CRM.</p>
+
+                            <div class="mb-8">
+                                <div class="flex items-baseline gap-2 mb-4">
+                                    <span class="text-4xl md:text-5xl font-bold text-white font-manrope">R$ 2.500</span>
+                                    <span class="text-zinc-500 text-sm">/mês</span>
+                                </div>
+                                <div class="p-4 bg-white/[0.03] border border-white/10 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <iconify-icon icon="lucide:trending-up" class="text-[#5070b0] w-4 h-4"></iconify-icon>
+                                        <span class="text-sm font-semibold text-white">Variável (Sucesso)</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-400">
+                                        <span class="text-[#5070b0] font-bold text-lg">5%</span> sobre o faturamento líquido das vendas de produtos (CBD)
+                                    </p>
+                                </div>
+                            </div>
+
+                            <ul class="space-y-3 mb-8 flex-1">
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Gestão contínua de tráfego</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Otimização diária de campanhas</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Manutenção e melhoria da IA</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-300"><iconify-icon icon="lucide:check" class="text-[#5070b0]"></iconify-icon> Relatórios e acompanhamento</li>
+                            </ul>
+
+                            <div class="mt-auto">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-xs font-medium">
+                                    <iconify-icon icon="lucide:handshake" class="w-3 h-3"></iconify-icon>
+                                    Nosso interesse alinhado com o lucro real da clínica
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+<!-- /SECTION:INVESTIMENTO_CARDS -->
+                </div>
+            </section>
+
+            <!-- Section Divider -->
+            <div class="section-divider max-w-4xl mx-auto"></div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: PRÓXIMOS PASSOS -->
+            <!-- ============================================ -->
+            <section id="proximos-passos" class="py-24 md:py-32 px-6">
+                <div class="max-w-4xl mx-auto">
+
+                    <!-- Section Header -->
+                    <div class="mb-16 md:mb-20 text-center reveal">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest text-[#5070b0] mb-6">
+                            <iconify-icon icon="lucide:flag" class="w-3 h-3"></iconify-icon>
+                            Seção 05
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-semibold text-white tracking-tight font-manrope mb-6">
+                            Próximos <span class="text-[#5070b0]">Passos</span>
+                        </h2>
+                        <p class="text-lg text-zinc-400 font-light">
+                            Para iniciarmos a Fase 1 (Fundação) imediatamente e garantirmos a virada de chave operacional.
+                        </p>
+                    </div>
+
+                    <!-- Steps -->
+                    <div class="space-y-6 mb-16">
+
+                        <!-- Step 1 -->
+                        <div class="reveal flex items-start gap-6 p-6 md:p-8 border border-white/10 bg-gradient-to-r from-zinc-900/50 to-black rounded-xl hover:border-[#5070b0]/20 transition-all group">
+                            <div class="shrink-0 w-14 h-14 rounded-full bg-[#5070b0]/10 border border-[#5070b0]/30 flex items-center justify-center">
+                                <span class="text-[#5070b0] font-bold font-manrope text-xl">1</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-2">Aprovação desta proposta</h3>
+                                <p class="text-zinc-400 text-sm">Confirmação formal do escopo, cronograma e condições comerciais apresentados neste documento.</p>
+                            </div>
+                            <div class="shrink-0 hidden md:flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <iconify-icon icon="lucide:arrow-right" class="w-5 h-5 text-[#5070b0]"></iconify-icon>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="reveal flex items-start gap-6 p-6 md:p-8 border border-white/10 bg-gradient-to-r from-zinc-900/50 to-black rounded-xl hover:border-[#5070b0]/20 transition-all group" style="transition-delay: 0.1s;">
+                            <div class="shrink-0 w-14 h-14 rounded-full bg-[#5070b0]/10 border border-[#5070b0]/30 flex items-center justify-center">
+                                <span class="text-[#5070b0] font-bold font-manrope text-xl">2</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-2">Assinatura do contrato</h3>
+                                <p class="text-zinc-400 text-sm">Contrato de prestação de serviços com todas as condições detalhadas e prazos estabelecidos.</p>
+                            </div>
+                            <div class="shrink-0 hidden md:flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <iconify-icon icon="lucide:arrow-right" class="w-5 h-5 text-[#5070b0]"></iconify-icon>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="reveal flex items-start gap-6 p-6 md:p-8 border border-white/10 bg-gradient-to-r from-zinc-900/50 to-black rounded-xl hover:border-[#5070b0]/20 transition-all group" style="transition-delay: 0.2s;">
+                            <div class="shrink-0 w-14 h-14 rounded-full bg-[#5070b0]/10 border border-[#5070b0]/30 flex items-center justify-center">
+                                <span class="text-[#5070b0] font-bold font-manrope text-xl">3</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-white font-manrope mb-2">Reunião de Onboarding</h3>
+                                <p class="text-zinc-400 text-sm">Acesso às contas, definição de credenciais e kick-off do projeto com alinhamento de expectativas.</p>
+                            </div>
+                            <div class="shrink-0 hidden md:flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <iconify-icon icon="lucide:arrow-right" class="w-5 h-5 text-[#5070b0]"></iconify-icon>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- CTA SECTION -->
+            <!-- ============================================ -->
+            <section class="py-24 md:py-32 px-6 text-center bg-zinc-950/40 reveal">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-5xl md:text-7xl font-bold font-manrope mb-8 tracking-tighter">
+                        Pronto para <span class="text-[#5070b0]">Escalar?</span>
+                    </h2>
+                    <p class="text-xl text-zinc-400 mb-12 leading-relaxed">
+                        Estou à disposição para ajustar detalhes finais.<br class="hidden md:inline">
+                        Vamos colocar a clínica na rota dos <span class="text-white font-semibold">R$ 100k/mês</span>.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                        <a href="https://wa.me/5500000000000" target="_blank" class="shiny-cta group">
+                            <span class="relative z-10 flex items-center gap-3 text-white font-medium text-lg">
+                                <iconify-icon icon="lucide:message-circle" class="w-5 h-5"></iconify-icon>
+                                Aprovar Proposta
+                                <iconify-icon icon="lucide:arrow-right" class="transition-transform group-hover:translate-x-1"></iconify-icon>
+                            </span>
+                        </a>
+                    </div>
+
+                    <p class="text-zinc-600 text-sm mt-8">
+                        <iconify-icon icon="lucide:shield-check" class="w-4 h-4 inline-block mr-1"></iconify-icon>
+                        Proposta válida para Fevereiro de 2026
+                    </p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ============================================ -->
+        <!-- FOOTER -->
+        <!-- ============================================ -->
+        <footer class="bg-black border-t border-zinc-900 pt-16 md:pt-20 pb-10 relative overflow-hidden">
+            <div class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 relative z-10">
+
+                <!-- Author Info -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-5 h-5 bg-[#5070b0] rounded-sm rotate-45"></div>
+                        <span class="text-2xl font-bold font-manrope tracking-tight">Lucas Silvano</span>
+                    </div>
+                    <p class="text-zinc-500 max-w-md leading-relaxed mb-4">
+                        Especialista em Vendas & Aquisição de Pacientes. Focado em implementar ecossistemas de vendas que transformam clínicas em máquinas de crescimento previsível.
+                    </p>
+                    <div class="flex items-center gap-6">
+                        <a href="https://wa.me/5500000000000" target="_blank" class="text-zinc-400 hover:text-[#5070b0] transition-colors flex items-center gap-2 text-sm">
+                            <iconify-icon icon="lucide:message-circle" class="w-4 h-4"></iconify-icon>
+                            WhatsApp
+                        </a>
+                        <a href="mailto:contato@lucassilvano.com" class="text-zinc-400 hover:text-[#5070b0] transition-colors flex items-center gap-2 text-sm">
+                            <iconify-icon icon="lucide:mail" class="w-4 h-4"></iconify-icon>
+                            Email
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Nav -->
+                <div>
+                    <h4 class="text-xs font-bold text-[#5070b0] uppercase tracking-widest mb-6">Navegação</h4>
+                    <ul class="space-y-4 text-zinc-400 text-sm">
+                        <li><a href="#diagnostico" class="hover:text-white transition-colors">Diagnóstico</a></li>
+                        <li><a href="#pilares" class="hover:text-white transition-colors">Os 5 Pilares</a></li>
+                        <li><a href="#cronograma" class="hover:text-white transition-colors">Cronograma</a></li>
+                        <li><a href="#investimento" class="hover:text-white transition-colors">Investimento</a></li>
+                        <li><a href="#proximos-passos" class="hover:text-white transition-colors">Próximos Passos</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Huge Footer Text -->
+            <div class="flex justify-center items-center py-8 opacity-[0.07] pointer-events-none">
+                <h1 class="text-[12vw] md:text-[10vw] leading-none font-bold font-manrope tracking-tighter text-stroke select-none whitespace-nowrap uppercase">Agência Avestra</h1>
+            </div>
+
+            <div class="max-w-6xl mx-auto px-6 border-t border-zinc-900 pt-8 flex flex-col md:flex-row items-center justify-between text-zinc-600 text-[10px] uppercase tracking-widest">
+                <p>Proposta Comercial Confidencial &mdash; Lucas Silvano &copy; 2026</p>
+                <div class="flex gap-6 mt-4 md:mt-0">
+                    <a href="index.html" class="hover:text-zinc-400 transition-colors">Voltar ao Início</a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCROLL REVEAL SCRIPT -->
+    <!-- ============================================ -->
+    <script>
+        // Intersection Observer for scroll reveal
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add staggered animation delays for fade-up elements
+        document.querySelectorAll('.animate-fade-up').forEach((el, i) => {
+            if (!el.style.animationDelay) {
+                el.style.animationDelay = `${i * 0.1}s`;
+            }
+        });
+    </script>
+
+</body>
+</html>

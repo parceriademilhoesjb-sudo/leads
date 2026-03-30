@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/LB-GROUP/Documents/Agência Avestra/MVP para Leads - Closers e SDR/app/**)",
+      "Read(//c/Users/LB-GROUP/Documents/Agência Avestra/MVP para Leads - Closers e SDR/frontend/**)",
+      "Read(//c/Users/LB-GROUP/Documents/Agência Avestra/MVP para Leads - Closers e SDR/**)",
+      "Bash(python3 -c \":*)",
+      "Bash(py -3 -c \":*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\LB-GROUP\\Documents\\Agência Avestra\\MVP para Leads - Closers e SDR\\app"
+    ]
+  }
+}

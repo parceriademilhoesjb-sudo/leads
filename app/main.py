@@ -39,6 +39,9 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@200;400;600;700;800&display=swap');
 
+/* ── Oculta nav automática de multi-página (não afeta sidebar customizado) ── */
+[data-testid="stSidebarNav"] { display: none !important; }
+
 /* ══════════════════════════════════════════════
    PULSE DESIGN SYSTEM — OAB Lead Qualifier CRM
    Inspirado no pulse.html · Agência Avestra
